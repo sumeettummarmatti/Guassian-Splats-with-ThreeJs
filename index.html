@@ -1,0 +1,585 @@
+<style>
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  #control-panel {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #f5f5f5;
+    border-radius: 8px;
+    max-width: 320px;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  #control-panel h2 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #c0c0ff;
+  }
+
+  #control-panel label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: #e0e0ff;
+  }
+
+  #splat-url-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(10, 10, 30, 0.9);
+    color: #f5f5f5;
+    outline: none;
+  }
+
+  #splat-url-input:focus {
+    border-color: #7f5cff;
+    box-shadow: 0 0 0 1px rgba(127, 92, 255, 0.6);
+  }
+
+  #load-splat-btn {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #7f5cff, #ff5cf0);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  #load-splat-btn:hover {
+    filter: brightness(1.1);
+  }
+
+  #control-panel small {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #c0c0c0;
+  }
+
+  #view-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .view-toggle-btn {
+    flex: 1 1 calc(33% - 4px);
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(20, 20, 40, 0.9);
+    color: #f5f5f5;
+    cursor: pointer;
+  }
+
+  .view-toggle-btn.active {
+    border-color: #7f5cff;
+    background: linear-gradient(135deg, #7f5cff, #ff5cf0);
+  }
+
+  #controls-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #a0ffcb;
+  }
+</style>
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
+    }
+  }
+</script>
+
+<div id="control-panel">
+  <h2>Import my splat</h2>
+  <label for="splat-url-input">Splat / SPZ URL</label>
+  <input id="splat-url-input" type="text" value="https://sparkjs.dev/assets/splats/butterfly.spz"
+    placeholder="Paste your .spz URL here" />
+  <button id="load-splat-btn">Load file</button>
+  <small>You can paste your own URL here to import and view your file.</small>
+  <label for="splat-file-input" style="margin-top: 8px;">Or choose a file from your laptop</label>
+  <input id="splat-file-input" type="file" accept=".spz,.ply,.splat"
+    style="margin-top: 4px; font-size: 11px; color: #f5f5f5;" />
+  <div id="view-buttons">
+    <button id="first-person-btn" class="view-toggle-btn active">First person view</button>
+    <button id="third-person-btn" class="view-toggle-btn">Third person view</button>
+    <button id="drone-view-btn" class="view-toggle-btn">Drone view</button>
+  </div>
+  <div id="controls-hint">WASD to move, drag mouse to aim. Drone view lets you fly with mouse pitch.</div>
+</div>
+<script type="module">
+  import * as THREE from "three";
+  import { SplatMesh } from "@sparkjsdev/spark";
+
+  const scene = new THREE.Scene();
+
+  let collisionMap = null;
+  let gridMetadata = null;
+  let floorY = 0; // Will be updated from metadata
+
+  async function loadCollisionMap() {
+    try {
+      const res = await fetch("collision_map.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to fetch collision_map.json");
+      const data = await res.json();
+      collisionMap = data.map;
+      gridMetadata = data.metadata;
+
+      // Calculate world bounds from metadata
+      const minX = gridMetadata.min_x;
+      const minZ = gridMetadata.min_z;
+      const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
+      const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
+
+      // Update global floor height
+      if (gridMetadata.min_y !== undefined) {
+        floorY = gridMetadata.min_y;
+        console.log("Global floor height set to:", floorY);
+      }
+
+      return {
+        bbox: {
+          x: [minX, maxX],
+          y: [-100, 100],
+          z: [minZ, maxZ],
+        },
+        center: [(minX + maxX) / 2, 0, (minZ + maxZ) / 2],
+      };
+    } catch (err) {
+      console.warn("[collision] Failed to load collision_map.json", err);
+      return {
+        bbox: {
+          x: [-20, 20],
+          y: [-20, 20],
+          z: [-20, 20],
+        },
+        center: [0, 0, 0],
+      };
+    }
+  }
+
+  const boundsData = await loadCollisionMap();
+  const worldBounds = boundsData.bbox;
+
+  const camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000,
+  );
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // simple lighting + ground for more "world" feeling
+  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(5, 10, 5);
+  scene.add(dirLight);
+
+  const groundGeo = new THREE.PlaneGeometry(80, 80);
+  const groundMat = new THREE.MeshStandardMaterial({
+    color: 0x101318,
+    roughness: 0.9,
+    metalness: 0.0,
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = floorY; // Use the loaded floor height
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // simple "human" avatar for GTA-style third-person feeling
+  const player = new THREE.Group();
+  const playerScale = 0.7;
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x6fc3ff, metalness: 0.1, roughness: 0.4 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x1c2a3d, roughness: 0.9 });
+  const accentMat = new THREE.MeshStandardMaterial({ color: 0xf25c54, roughness: 0.6 });
+
+  const hips = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.25, 0.3), darkMat);
+  hips.position.y = 1.0;
+  player.add(hips);
+
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.8, 0.32), bodyMat);
+  torso.position.y = 1.55;
+  player.add(torso);
+
+  const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.1), accentMat);
+  chestPlate.position.set(0, 1.8, 0.21);
+  player.add(chestPlate);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
+  head.position.y = 2.15;
+  player.add(head);
+
+  function makeArm(side) {
+    const sign = side === "left" ? -1 : 1;
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.6, 12), bodyMat);
+    upper.rotation.z = Math.PI / 2;
+    upper.position.set(sign * 0.45, 1.65, 0);
+    player.add(upper);
+
+    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.6, 12), darkMat);
+    lower.rotation.z = Math.PI / 2;
+    lower.position.set(sign * 0.45, 1.3, 0.05);
+    player.add(lower);
+
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), accentMat);
+    hand.position.set(sign * 0.45, 1.05, 0.08);
+    player.add(hand);
+  }
+  makeArm("left");
+  makeArm("right");
+
+  function makeLeg(side) {
+    const sign = side === "left" ? -1 : 1;
+    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.25), darkMat);
+    upper.position.set(sign * 0.15, 0.7, 0);
+    player.add(upper);
+
+    const lower = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.55, 0.23), bodyMat);
+    lower.position.set(sign * 0.15, 0.3, -0.02);
+    player.add(lower);
+
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.35), accentMat);
+    foot.position.set(sign * 0.15, 0.05, 0.1);
+    player.add(foot);
+  }
+  makeLeg("left");
+  makeLeg("right");
+
+  player.scale.set(playerScale, playerScale, playerScale);
+  player.position.set(0, floorY, 3);
+  scene.add(player);
+
+  let currentSplat = null;
+
+  function loadSplat(url) {
+    if (currentSplat) {
+      scene.remove(currentSplat);
+    }
+
+    const mesh = new SplatMesh({ url });
+    mesh.quaternion.set(1, 0, 0, 0);
+    mesh.position.set(0, 0, 0); // Reset to origin, let the points dictate height
+    scene.add(mesh);
+    currentSplat = mesh;
+  }
+
+  // initial file (default)
+  const defaultURL = "https://sparkjs.dev/assets/splats/butterfly.spz";
+  loadSplat(defaultURL);
+
+  // hook up the small “import my file” panel
+  const input = document.getElementById("splat-url-input");
+  const button = document.getElementById("load-splat-btn");
+  const fileInput = document.getElementById("splat-file-input");
+
+  if (input && button) {
+    button.addEventListener("click", () => {
+      const url = input.value.trim();
+      if (!url) return;
+      loadSplat(url);
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const url = input.value.trim();
+        if (!url) return;
+        loadSplat(url);
+      }
+    });
+  }
+
+  // local file import: creates a temporary URL for the selected file
+  if (fileInput) {
+    fileInput.addEventListener("change", () => {
+      const files = fileInput.files;
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const objectUrl = URL.createObjectURL(file);
+      loadSplat(objectUrl);
+      // optional: show that we're now using a local file instead of a remote URL
+      if (input) {
+        input.value = "";
+        input.placeholder = "Loaded from local file: " + file.name;
+      }
+    });
+  }
+
+  // ===== GTA-style controls: first-person / third-person with WASD =====
+  const firstPersonBtn = document.getElementById("first-person-btn");
+  const thirdPersonBtn = document.getElementById("third-person-btn");
+  const droneBtn = document.getElementById("drone-view-btn");
+
+  let viewMode = "first"; // "first" | "third" | "drone"
+  let yaw = 0;
+  let pitch = 0;
+  const yawSpeed = 0.0025;
+  const pitchSpeed = 0.0025;
+  const maxPitch = Math.PI / 2 - 0.1;
+
+  const keys = { w: false, a: false, s: false, d: false };
+  const walkSpeed = 3.0; // meters / second
+  const droneSpeed = 6.0;
+  const firstPersonEyeHeight = 1.45;
+
+  let lastTime = performance.now();
+  let isMouseDown = false;
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+
+  const dronePosition = new THREE.Vector3(
+    boundsData.center?.[0] ?? 0,
+    floorY + 3,
+    (boundsData.center?.[2] ?? 0) + 6,
+  );
+
+  function setViewMode(mode) {
+    viewMode = mode;
+    player.visible = mode !== "first";
+    if (firstPersonBtn && thirdPersonBtn && droneBtn) {
+      firstPersonBtn.classList.toggle("active", mode === "first");
+      thirdPersonBtn.classList.toggle("active", mode === "third");
+      droneBtn.classList.toggle("active", mode === "drone");
+    }
+  }
+
+  if (firstPersonBtn && thirdPersonBtn && droneBtn) {
+    firstPersonBtn.addEventListener("click", () => setViewMode("first"));
+    thirdPersonBtn.addEventListener("click", () => setViewMode("third"));
+    droneBtn.addEventListener("click", () => setViewMode("drone"));
+  }
+
+  window.addEventListener("keydown", (event) => {
+    if (event.code === "KeyW") keys.w = true;
+    if (event.code === "KeyA") keys.a = true;
+    if (event.code === "KeyS") keys.s = true;
+    if (event.code === "KeyD") keys.d = true;
+  });
+
+  window.addEventListener("keyup", (event) => {
+    if (event.code === "KeyW") keys.w = false;
+    if (event.code === "KeyA") keys.a = false;
+    if (event.code === "KeyS") keys.s = false;
+    if (event.code === "KeyD") keys.d = false;
+  });
+
+  renderer.domElement.addEventListener("mousedown", (event) => {
+    isMouseDown = true;
+    lastMouseX = event.clientX;
+    lastMouseY = event.clientY;
+  });
+
+  window.addEventListener("mouseup", () => {
+    isMouseDown = false;
+  });
+
+  window.addEventListener("mousemove", (event) => {
+    if (!isMouseDown) return;
+    const dx = event.clientX - lastMouseX;
+    const dy = event.clientY - lastMouseY;
+    lastMouseX = event.clientX;
+    lastMouseY = event.clientY;
+
+    yaw -= dx * yawSpeed;
+    pitch -= dy * pitchSpeed;
+    pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
+  });
+
+  function getForwardVector(includePitch = false) {
+    if (includePitch) {
+      return new THREE.Vector3(
+        Math.sin(yaw) * Math.cos(pitch),
+        Math.sin(pitch),
+        Math.cos(yaw) * Math.cos(pitch),
+      ).normalize();
+    }
+    return new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
+  }
+
+  function getRightVector() {
+    return new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)).normalize();
+  }
+
+  function clampToBounds(vector) {
+    vector.x = Math.max(worldBounds.x[0], Math.min(worldBounds.x[1], vector.x));
+    vector.z = Math.max(worldBounds.z[0], Math.min(worldBounds.z[1], vector.z));
+    // No obstacle box check here anymore
+  }
+
+  function getGridCell(x, z) {
+    if (!gridMetadata || !collisionMap) return null;
+    const c = Math.floor((x - gridMetadata.min_x) / gridMetadata.grid_size);
+    const r = Math.floor((z - gridMetadata.min_z) / gridMetadata.grid_size);
+    const key = `${c},${r}`;
+    return collisionMap[key];
+  }
+
+  function checkCollision(x, z) {
+    const cell = getGridCell(x, z);
+    return cell && cell.b === 1;
+  }
+
+  function updatePlayer(dt) {
+    if (viewMode === "drone") {
+      return; // player stays still in drone mode
+    }
+
+    const forwardDir = getForwardVector(false);
+    const rightDir = getRightVector();
+    let move = new THREE.Vector3();
+
+    if (keys.w) move.add(forwardDir);
+    if (keys.s) move.sub(forwardDir);
+    if (keys.a) move.sub(rightDir);
+    if (keys.d) move.add(rightDir);
+
+    if (move.lengthSq() > 0) {
+      move.normalize().multiplyScalar(walkSpeed * dt);
+
+      // Predict next position
+      const nextPos = player.position.clone().add(move);
+
+      // Collision Radius Check (0.3m radius)
+      // Check center + 4 cardinal points
+      const radius = 0.3;
+      const checks = [
+        { x: nextPos.x, z: nextPos.z },
+        { x: nextPos.x + radius, z: nextPos.z },
+        { x: nextPos.x - radius, z: nextPos.z },
+        { x: nextPos.x, z: nextPos.z + radius },
+        { x: nextPos.x, z: nextPos.z - radius },
+      ];
+
+      let blocked = false;
+
+      // Get current floor height for step check
+      const currentCell = getGridCell(player.position.x, player.position.z);
+      const currentY = currentCell ? currentCell.y : floorY;
+
+      for (const p of checks) {
+        const cell = getGridCell(p.x, p.z);
+
+        // Check 1: Is it an explicit obstacle?
+        if (cell && cell.b === 1) {
+          blocked = true;
+          break;
+        }
+
+        // Check 2: Is the step too high? (Slope check)
+        // If the target floor is > 0.3m higher/lower than current floor, block it.
+        // This prevents walking up steep walls or onto high objects like the elephant.
+        if (cell && Math.abs(cell.y - currentY) > 0.35) {
+          blocked = true;
+          break;
+        }
+      }
+
+      if (!blocked) {
+        player.position.add(move);
+        const angle = Math.atan2(move.x, move.z);
+        player.rotation.y = angle;
+      } else {
+        // Simple sliding: try moving just X or just Z
+        // (Optional refinement, for now just block)
+      }
+    }
+
+    // Height Interpolation (GTA style)
+    const currentCell = getGridCell(player.position.x, player.position.z);
+    if (currentCell) {
+      const targetY = currentCell.y;
+      // Smoothly interpolate current Y to target Y
+      // Speed 5.0 gives a nice snappy but smooth step up
+      player.position.y += (targetY - player.position.y) * dt * 8.0;
+    }
+
+    clampToBounds(player.position);
+  }
+
+  function updateDrone(dt) {
+    if (viewMode !== "drone") return;
+    const forwardDir = getForwardVector(true);
+    const rightDir = getRightVector();
+    let move = new THREE.Vector3();
+
+    if (keys.w) move.add(forwardDir);
+    if (keys.s) move.sub(forwardDir);
+    if (keys.a) move.sub(rightDir);
+    if (keys.d) move.add(rightDir);
+
+    if (move.lengthSq() > 0) {
+      move.normalize().multiplyScalar(droneSpeed * dt);
+      dronePosition.add(move);
+    }
+
+    dronePosition.y = Math.max(floorY + 0.5, Math.min(worldBounds.y[1], dronePosition.y));
+    clampToBounds(dronePosition);
+  }
+
+  function updateCamera() {
+    if (viewMode === "first") {
+      camera.position.set(
+        player.position.x,
+        player.position.y + firstPersonEyeHeight,
+        player.position.z,
+      );
+      const lookDir = getForwardVector(true);
+      const target = new THREE.Vector3().copy(camera.position).add(lookDir);
+      camera.lookAt(target);
+    } else if (viewMode === "third") {
+      const offset = new THREE.Vector3(0, 2.0, 6.0);
+      const rotY = new THREE.Matrix4().makeRotationY(yaw);
+      offset.applyMatrix4(rotY);
+
+      const focus = new THREE.Vector3(
+        player.position.x,
+        player.position.y + 1.4,
+        player.position.z,
+      );
+      const camPos = new THREE.Vector3().copy(focus).add(offset);
+      camera.position.copy(camPos);
+      camera.lookAt(focus);
+    } else {
+      camera.position.copy(dronePosition);
+      const lookDir = getForwardVector(true);
+      const target = new THREE.Vector3().copy(dronePosition).add(lookDir);
+      camera.lookAt(target);
+    }
+  }
+
+  renderer.setAnimationLoop(function animate(time) {
+    const dt = (time - lastTime) / 1000;
+    lastTime = time;
+
+    updatePlayer(dt);
+    updateDrone(dt);
+    updateCamera();
+
+    renderer.render(scene, camera);
+  });
+</script>
