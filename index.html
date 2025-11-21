@@ -101,6 +101,211 @@
     font-size: 11px;
     color: #a0ffcb;
   }
+
+  #debug-panel {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  #debug-panel h3 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #ffc080;
+  }
+
+  .debug-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #e0e0ff;
+    cursor: pointer;
+  }
+
+  .debug-checkbox input {
+    margin-right: 6px;
+    cursor: pointer;
+  }
+
+  #coord-info {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    color: #a0ffa0;
+    line-height: 1.4;
+  }
+
+  #mesh-tools-panel {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #f5f5f5;
+    border-radius: 8px;
+    width: 280px;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  #mesh-tools-panel h2 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #ffc080;
+  }
+
+  .tool-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .tool-btn {
+    padding: 10px 8px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(20, 20, 40, 0.9);
+    color: #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .tool-btn:hover {
+    border-color: rgba(127, 92, 255, 0.5);
+    background: rgba(30, 30, 50, 0.95);
+  }
+
+  .tool-btn.active {
+    border-color: #ff5cf0;
+    background: linear-gradient(135deg, #7f5cff, #ff5cf0);
+    box-shadow: 0 4px 12px rgba(255, 92, 240, 0.3);
+  }
+
+  .tool-settings {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .tool-settings label {
+    display: block;
+    font-size: 11px;
+    margin-bottom: 8px;
+    color: #e0e0ff;
+  }
+
+  .tool-settings input[type="range"] {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .tool-settings .value-display {
+    color: #7f5cff;
+    font-weight: 600;
+  }
+
+  #mesh-list {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  #mesh-list h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #ffc080;
+  }
+
+  .mesh-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: rgba(20, 20, 40, 0.6);
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  .mesh-item:hover {
+    background: rgba(30, 30, 50, 0.8);
+  }
+
+  .mesh-item-info {
+    flex: 1;
+  }
+
+  .mesh-item-type {
+    display: inline-block;
+    padding: 2px 6px;
+    margin-right: 6px;
+    background: rgba(127, 92, 255, 0.3);
+    border-radius: 3px;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+
+  .delete-mesh-btn {
+    padding: 2px 8px;
+    font-size: 10px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 92, 92, 0.5);
+    background: rgba(255, 92, 92, 0.2);
+    color: #ff5c5c;
+    cursor: pointer;
+  }
+
+  .delete-mesh-btn:hover {
+    background: rgba(255, 92, 92, 0.4);
+  }
+
+  .mesh-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .mesh-action-btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(20, 20, 40, 0.9);
+    color: #f5f5f5;
+    cursor: pointer;
+  }
+
+  .mesh-action-btn:hover {
+    background: rgba(30, 30, 50, 0.95);
+  }
+
+  .tool-hint {
+    margin-top: 12px;
+    padding: 8px;
+    background: rgba(127, 92, 255, 0.15);
+    border-left: 3px solid #7f5cff;
+    border-radius: 4px;
+    font-size: 10px;
+    line-height: 1.5;
+    color: #c0c0ff;
+  }
 </style>
 <script type="importmap">
   {
@@ -127,7 +332,100 @@
     <button id="drone-view-btn" class="view-toggle-btn">Drone view</button>
   </div>
   <div id="controls-hint">WASD to move, drag mouse to aim. Drone view lets you fly with mouse pitch.</div>
+
+  <div id="debug-panel">
+    <h3>Debug Visualization</h3>
+    <label class="debug-checkbox">
+      <input type="checkbox" id="show-bounds" checked>
+      Show Bounding Box
+    </label>
+    <label class="debug-checkbox">
+      <input type="checkbox" id="show-grid" checked>
+      Show Coordinate Grid
+    </label>
+    <label class="debug-checkbox">
+      <input type="checkbox" id="show-axes" checked>
+      Show Axis Helpers
+    </label>
+    <label class="debug-checkbox">
+      <input type="checkbox" id="show-collision">
+      Show Collision Grid
+    </label>
+
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
+      <h3 style="margin: 0 0 8px; font-size: 11px; color: #ffc080;">Alignment Offset</h3>
+      <label style="display: block; font-size: 10px; margin-bottom: 4px;">
+        X Offset: <span id="offset-x-value">0</span>m
+        <input type="range" id="offset-x" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+      </label>
+      <label style="display: block; font-size: 10px; margin-bottom: 4px;">
+        Y Offset: <span id="offset-y-value">0</span>m
+        <input type="range" id="offset-y" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+      </label>
+      <label style="display: block; font-size: 10px; margin-bottom: 4px;">
+        Z Offset: <span id="offset-z-value">0</span>m
+        <input type="range" id="offset-z" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+      </label>
+    </div>
+
+    <div id="coord-info"></div>
+  </div>
 </div>
+
+<div id="mesh-tools-panel">
+  <h2>🔧 Mesh Tools</h2>
+
+  <div class="tool-buttons">
+    <button id="tool-none" class="tool-btn">None</button>
+    <button id="tool-sphere" class="tool-btn">🔵 Sphere</button>
+    <button id="tool-box" class="tool-btn">📦 Box</button>
+    <button id="tool-brush" class="tool-btn">🖌️ Brush</button>
+  </div>
+
+  <div class="tool-settings">
+    <label id="sphere-size-label">
+      Sphere Radius: <span class="value-display" id="sphere-size-value">2.0</span>m
+      <input type="range" id="sphere-size" min="0.5" max="10" step="0.5" value="2.0">
+    </label>
+
+    <label id="box-width-label">
+      Box Width: <span class="value-display" id="box-width-value">3.0</span>m
+      <input type="range" id="box-width" min="0.5" max="15" step="0.5" value="3.0">
+    </label>
+
+    <label id="box-height-label">
+      Box Height: <span class="value-display" id="box-height-value">2.5</span>m
+      <input type="range" id="box-height" min="0.5" max="10" step="0.5" value="2.5">
+    </label>
+
+    <label id="box-depth-label">
+      Box Depth: <span class="value-display" id="box-depth-value">3.0</span>m
+      <input type="range" id="box-depth" min="0.5" max="15" step="0.5" value="3.0">
+    </label>
+
+    <label id="brush-width-label">
+      Brush Width: <span class="value-display" id="brush-width-value">1.0</span>m
+      <input type="range" id="brush-width" min="0.2" max="5" step="0.2" value="1.0">
+    </label>
+  </div>
+
+  <div class="tool-hint" id="tool-hint">
+    Select a tool to create collision meshes
+  </div>
+
+  <div id="mesh-list">
+    <h3>Created Meshes (<span id="mesh-count">0</span>)</h3>
+    <div id="mesh-items"></div>
+    <div class="mesh-actions">
+      <button class="mesh-action-btn" id="export-meshes">💾 Export</button>
+      <button class="mesh-action-btn" id="import-meshes">📂 Import</button>
+      <button class="mesh-action-btn" id="clear-meshes">🗑️ Clear All</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="mesh-import-input" accept=".json" style="display: none;">
+
 <script type="module">
   import * as THREE from "three";
   import { SplatMesh } from "@sparkjsdev/spark";
@@ -210,6 +508,297 @@
   ground.position.y = floorY; // Use the loaded floor height
   ground.receiveShadow = true;
   scene.add(ground);
+
+  // ===== DEBUG VISUALIZATION OBJECTS =====
+  let boundingBox = null;
+  let gridHelper = null;
+  let axesHelper = null;
+  let collisionGridGroup = null;
+
+  function createBoundingBox() {
+    if (!gridMetadata) return;
+
+    const minX = gridMetadata.min_x;
+    const minZ = gridMetadata.min_z;
+    const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
+    const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
+    const minY = gridMetadata.min_y || -5;
+
+    // Calculate actual Y extent from collision data
+    let actualMaxY = minY;
+    for (const cell of Object.values(collisionMap)) {
+      if (cell.y > actualMaxY) actualMaxY = cell.y;
+    }
+    const maxY = actualMaxY + 2; // Add 2m headroom
+
+    const width = maxX - minX;
+    const depth = maxZ - minZ;
+    const height = maxY - minY;
+
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    const edges = new THREE.EdgesGeometry(geometry);
+    const material = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+    const box = new THREE.LineSegments(edges, material);
+
+    box.position.set(
+      (minX + maxX) / 2,
+      (minY + maxY) / 2,
+      (minZ + maxZ) / 2
+    );
+
+    return box;
+  }
+
+  function createGridHelper() {
+    if (!gridMetadata) return;
+
+    const minX = gridMetadata.min_x;
+    const minZ = gridMetadata.min_z;
+    const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
+    const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
+
+    const width = maxX - minX;
+    const depth = maxZ - minZ;
+    const divisions = Math.max(gridMetadata.cols, gridMetadata.rows);
+
+    const grid = new THREE.GridHelper(
+      Math.max(width, depth),
+      Math.floor(divisions / 5), // Fewer divisions for clarity
+      0xffff00,
+      0x444444
+    );
+
+    grid.position.set(
+      (minX + maxX) / 2,
+      floorY,
+      (minZ + maxZ) / 2
+    );
+
+    return grid;
+  }
+
+  function createAxesHelper() {
+    const size = 2;
+    const axes = new THREE.AxesHelper(size);
+    axes.position.set(0, floorY + 0.01, 0);
+    return axes;
+  }
+
+  function createCollisionGrid() {
+    if (!gridMetadata || !collisionMap) return;
+
+    const group = new THREE.Group();
+    const cellSize = gridMetadata.grid_size;
+
+    // Create a single geometry for efficiency
+    const planeGeom = new THREE.PlaneGeometry(cellSize * 0.9, cellSize * 0.9);
+
+    // Don't sample - show all cells for accuracy
+    let blockedCount = 0;
+    let walkableCount = 0;
+
+    for (const [key, cell] of Object.entries(collisionMap)) {
+      const [c, r] = key.split(',').map(Number);
+
+      const x = gridMetadata.min_x + c * cellSize + cellSize / 2;
+      const z = gridMetadata.min_z + r * cellSize + cellSize / 2;
+      const y = cell.y + 0.01; // Slightly above the floor
+
+      // Color based on blocked status
+      const isBlocked = cell.b === 1;
+      const color = isBlocked ? 0xff4444 : 0x44ff44;
+      const opacity = isBlocked ? 0.7 : 0.2;
+
+      if (isBlocked) blockedCount++;
+      else walkableCount++;
+
+      const material = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+
+      const plane = new THREE.Mesh(planeGeom, material);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(x, y, z);
+      group.add(plane);
+    }
+
+    console.log(`Collision grid: ${blockedCount} blocked, ${walkableCount} walkable cells`);
+    return group;
+  }
+
+  function createDirectionalLabels() {
+    if (!gridMetadata) return null;
+
+    const group = new THREE.Group();
+    const minX = gridMetadata.min_x;
+    const minZ = gridMetadata.min_z;
+    const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
+    const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
+    const centerX = (minX + maxX) / 2;
+    const centerZ = (minZ + maxZ) / 2;
+    const labelY = floorY + 0.5;
+
+    // Create canvas for text
+    function createTextSprite(text, color = '#ffffff', size = 64) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = `bold ${size}px Arial`;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ map: texture });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(2, 1, 1);
+      return sprite;
+    }
+
+    // North (+Z)
+    const north = createTextSprite('NORTH (+Z)', '#00ffff');
+    north.position.set(centerX, labelY, maxZ + 1);
+    group.add(north);
+
+    // South (-Z)
+    const south = createTextSprite('SOUTH (-Z)', '#00ffff');
+    south.position.set(centerX, labelY, minZ - 1);
+    group.add(south);
+
+    // East (+X)
+    const east = createTextSprite('EAST (+X)', '#ffff00');
+    east.position.set(maxX + 1, labelY, centerZ);
+    group.add(east);
+
+    // West (-X)
+    const west = createTextSprite('WEST (-X)', '#ffff00');
+    west.position.set(minX - 1, labelY, centerZ);
+    group.add(west);
+
+    // Corner coordinate labels
+    const coordSize = 32;
+
+    // NE corner
+    const ne = createTextSprite(`(${maxX.toFixed(1)}, ${maxZ.toFixed(1)})`, '#ffffff', coordSize);
+    ne.position.set(maxX, labelY, maxZ);
+    ne.scale.set(1.5, 0.75, 1);
+    group.add(ne);
+
+    // NW corner
+    const nw = createTextSprite(`(${minX.toFixed(1)}, ${maxZ.toFixed(1)})`, '#ffffff', coordSize);
+    nw.position.set(minX, labelY, maxZ);
+    nw.scale.set(1.5, 0.75, 1);
+    group.add(nw);
+
+    // SE corner
+    const se = createTextSprite(`(${maxX.toFixed(1)}, ${minZ.toFixed(1)})`, '#ffffff', coordSize);
+    se.position.set(maxX, labelY, minZ);
+    se.scale.set(1.5, 0.75, 1);
+    group.add(se);
+
+    // SW corner
+    const sw = createTextSprite(`(${minX.toFixed(1)}, ${minZ.toFixed(1)})`, '#ffffff', coordSize);
+    sw.position.set(minX, labelY, minZ);
+    sw.scale.set(1.5, 0.75, 1);
+    group.add(sw);
+
+    return group;
+  }
+
+  // Initialize visualization objects
+  boundingBox = createBoundingBox();
+  gridHelper = createGridHelper();
+  axesHelper = createAxesHelper();
+  let directionalLabels = createDirectionalLabels();
+
+  if (boundingBox) scene.add(boundingBox);
+  if (gridHelper) scene.add(gridHelper);
+  if (axesHelper) scene.add(axesHelper);
+  if (directionalLabels) scene.add(directionalLabels);
+
+  // Hook up debug controls
+  const showBoundsCheckbox = document.getElementById('show-bounds');
+  const showGridCheckbox = document.getElementById('show-grid');
+  const showAxesCheckbox = document.getElementById('show-axes');
+  const showCollisionCheckbox = document.getElementById('show-collision');
+  const coordInfo = document.getElementById('coord-info');
+
+  if (showBoundsCheckbox) {
+    showBoundsCheckbox.addEventListener('change', (e) => {
+      if (boundingBox) boundingBox.visible = e.target.checked;
+    });
+  }
+
+  if (showGridCheckbox) {
+    showGridCheckbox.addEventListener('change', (e) => {
+      if (gridHelper) gridHelper.visible = e.target.checked;
+    });
+  }
+
+  if (showAxesCheckbox) {
+    showAxesCheckbox.addEventListener('change', (e) => {
+      if (axesHelper) axesHelper.visible = e.target.checked;
+    });
+  }
+
+  if (showCollisionCheckbox) {
+    showCollisionCheckbox.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        if (!collisionGridGroup) {
+          collisionGridGroup = createCollisionGrid();
+          if (collisionGridGroup) scene.add(collisionGridGroup);
+        } else {
+          collisionGridGroup.visible = true;
+        }
+      } else {
+        if (collisionGridGroup) collisionGridGroup.visible = false;
+      }
+    });
+  }
+
+  // Update coordinate info display
+  function updateCoordInfo() {
+    if (!coordInfo || !gridMetadata) return;
+
+    const minX = gridMetadata.min_x.toFixed(2);
+    const minZ = gridMetadata.min_z.toFixed(2);
+    const maxX = (gridMetadata.min_x + gridMetadata.cols * gridMetadata.grid_size).toFixed(2);
+    const maxZ = (gridMetadata.min_z + gridMetadata.rows * gridMetadata.grid_size).toFixed(2);
+
+    // Calculate actual Y range from collision data
+    let minY = gridMetadata.min_y;
+    let maxY = gridMetadata.min_y;
+    for (const cell of Object.values(collisionMap)) {
+      if (cell.y < minY) minY = cell.y;
+      if (cell.y > maxY) maxY = cell.y;
+    }
+
+    const playerX = player.position.x.toFixed(2);
+    const playerY = player.position.y.toFixed(2);
+    const playerZ = player.position.z.toFixed(2);
+
+    coordInfo.innerHTML = `
+      <strong>Map Bounds:</strong><br>
+      X: ${minX} to ${maxX}<br>
+      Y: ${minY.toFixed(2)} to ${maxY.toFixed(2)}<br>
+      Z: ${minZ} to ${maxZ}<br>
+      Grid: ${gridMetadata.cols} × ${gridMetadata.rows}<br>
+      Cell Size: ${gridMetadata.grid_size}m<br>
+      <br>
+      <strong>Player Position:</strong><br>
+      X: ${playerX}, Y: ${playerY}, Z: ${playerZ}
+    `;
+  }
 
   // simple "human" avatar for GTA-style third-person feeling
   const player = new THREE.Group();
@@ -572,6 +1161,482 @@
     }
   }
 
+  // ===== MESH TOOLS SYSTEM =====
+  let activeTool = 'none'; // 'none' | 'sphere' | 'box' | 'brush'
+  let createdMeshes = [];
+  let meshIdCounter = 0;
+  let previewMesh = null;
+  let isCreating = false;
+  let creationStart = null;
+  let brushPoints = [];
+
+  // Tool settings
+  let sphereRadius = 2.0;
+  let boxWidth = 3.0;
+  let boxHeight = 2.5;
+  let boxDepth = 3.0;
+  let brushWidth = 1.0;
+
+  // Material for collision meshes
+  const collisionMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff4444,
+    transparent: true,
+    opacity: 0.5,
+    roughness: 0.3,
+    metalness: 0.1
+  });
+
+  const previewMaterial = new THREE.MeshStandardMaterial({
+    color: 0x7f5cff,
+    transparent: true,
+    opacity: 0.3,
+    wireframe: false
+  });
+
+  // Get UI elements
+  const toolBtns = {
+    none: document.getElementById('tool-none'),
+    sphere: document.getElementById('tool-sphere'),
+    box: document.getElementById('tool-box'),
+    brush: document.getElementById('tool-brush')
+  };
+
+  const sphereSizeInput = document.getElementById('sphere-size');
+  const sphereSizeValue = document.getElementById('sphere-size-value');
+  const boxWidthInput = document.getElementById('box-width');
+  const boxWidthValue = document.getElementById('box-width-value');
+  const boxHeightInput = document.getElementById('box-height');
+  const boxHeightValue = document.getElementById('box-height-value');
+  const boxDepthInput = document.getElementById('box-depth');
+  const boxDepthValue = document.getElementById('box-depth-value');
+  const brushWidthInput = document.getElementById('brush-width');
+  const brushWidthValue = document.getElementById('brush-width-value');
+  const toolHint = document.getElementById('tool-hint');
+  const meshCount = document.getElementById('mesh-count');
+  const meshItems = document.getElementById('mesh-items');
+
+  // Tool hints
+  const toolHints = {
+    none: 'Select a tool to create collision meshes',
+    sphere: 'Click and drag to create a sphere. Drag distance sets the radius.',
+    box: 'Click and drag to create a box. Drag distance sets the size.',
+    brush: 'Click and drag to paint a collision path along your mouse movement.'
+  };
+
+  // Set active tool
+  function setActiveTool(tool) {
+    activeTool = tool;
+    Object.keys(toolBtns).forEach(key => {
+      toolBtns[key]?.classList.toggle('active', key === tool);
+    });
+    toolHint.textContent = toolHints[tool];
+
+    // Show/hide relevant settings
+    document.getElementById('sphere-size-label').style.display = tool === 'sphere' ? 'block' : 'none';
+    document.getElementById('box-width-label').style.display = tool === 'box' ? 'block' : 'none';
+    document.getElementById('box-height-label').style.display = tool === 'box' ? 'block' : 'none';
+    document.getElementById('box-depth-label').style.display = tool === 'box' ? 'block' : 'none';
+    document.getElementById('brush-width-label').style.display = tool === 'brush' ? 'block' : 'none';
+
+    // Clear any ongoing creation
+    clearPreview();
+  }
+
+  // Hook up tool buttons
+  Object.keys(toolBtns).forEach(tool => {
+    toolBtns[tool]?.addEventListener('click', () => setActiveTool(tool));
+  });
+
+  // Hook up settings inputs
+  sphereSizeInput?.addEventListener('input', (e) => {
+    sphereRadius = parseFloat(e.target.value);
+    sphereSizeValue.textContent = sphereRadius.toFixed(1);
+  });
+
+  boxWidthInput?.addEventListener('input', (e) => {
+    boxWidth = parseFloat(e.target.value);
+    boxWidthValue.textContent = boxWidth.toFixed(1);
+  });
+
+  boxHeightInput?.addEventListener('input', (e) => {
+    boxHeight = parseFloat(e.target.value);
+    boxHeightValue.textContent = boxHeight.toFixed(1);
+  });
+
+  boxDepthInput?.addEventListener('input', (e) => {
+    boxDepth = parseFloat(e.target.value);
+    boxDepthValue.textContent = boxDepth.toFixed(1);
+  });
+
+  brushWidthInput?.addEventListener('input', (e) => {
+    brushWidth = parseFloat(e.target.value);
+    brushWidthValue.textContent = brushWidth.toFixed(1);
+  });
+
+  // Initialize tool settings display
+  setActiveTool('none');
+
+  // Raycaster for mouse interaction
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  // Get 3D position from mouse
+  function getWorldPosition(event) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    // Create an invisible ground plane to raycast against
+    const planeY = floorY;
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
+    const intersection = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, intersection);
+
+    return intersection;
+  }
+
+  function clearPreview() {
+    if (previewMesh) {
+      scene.remove(previewMesh);
+      previewMesh = null;
+    }
+    brushPoints = [];
+  }
+
+  function createSphere(center, radius) {
+    const geometry = new THREE.SphereGeometry(radius, 32, 32);
+    const mesh = new THREE.Mesh(geometry, collisionMaterial.clone());
+    mesh.position.copy(center);
+    return mesh;
+  }
+
+  function createBox(center, width, height, depth) {
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    const mesh = new THREE.Mesh(geometry, collisionMaterial.clone());
+    mesh.position.copy(center);
+    mesh.position.y += height / 2; // Align bottom to floor
+    return mesh;
+  }
+
+  function createBrushStroke(points, width) {
+    if (points.length < 2) return null;
+
+    // Create a tube geometry along the path
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geometry = new THREE.TubeGeometry(curve, points.length * 2, width / 2, 8, false);
+    const mesh = new THREE.Mesh(geometry, collisionMaterial.clone());
+    return mesh;
+  }
+
+  function addMesh(mesh, type, data) {
+    const id = meshIdCounter++;
+    const meshData = {
+      id: id,
+      type: type,
+      mesh: mesh,
+      data: data
+    };
+
+    createdMeshes.push(meshData);
+    scene.add(mesh);
+    updateMeshList();
+
+    console.log(`Created ${type} mesh #${id}`);
+  }
+
+  function deleteMesh(id) {
+    const index = createdMeshes.findIndex(m => m.id === id);
+    if (index !== -1) {
+      scene.remove(createdMeshes[index].mesh);
+      createdMeshes.splice(index, 1);
+      updateMeshList();
+    }
+  }
+
+  function clearAllMeshes() {
+    createdMeshes.forEach(m => scene.remove(m.mesh));
+    createdMeshes = [];
+    updateMeshList();
+  }
+
+  function updateMeshList() {
+    meshCount.textContent = createdMeshes.length;
+    meshItems.innerHTML = '';
+
+    createdMeshes.forEach(meshData => {
+      const item = document.createElement('div');
+      item.className = 'mesh-item';
+
+      const info = document.createElement('div');
+      info.className = 'mesh-item-info';
+
+      const typeSpan = document.createElement('span');
+      typeSpan.className = 'mesh-item-type';
+      typeSpan.textContent = meshData.type;
+
+      const pos = meshData.mesh.position;
+      const posText = document.createTextNode(` (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)})`);
+
+      info.appendChild(typeSpan);
+      info.appendChild(posText);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-mesh-btn';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => deleteMesh(meshData.id));
+
+      item.appendChild(info);
+      item.appendChild(deleteBtn);
+      meshItems.appendChild(item);
+    });
+  }
+
+  // Export/Import functionality
+  document.getElementById('export-meshes')?.addEventListener('click', () => {
+    const data = createdMeshes.map(m => ({
+      type: m.type,
+      position: { x: m.mesh.position.x, y: m.mesh.position.y, z: m.mesh.position.z },
+      rotation: { x: m.mesh.rotation.x, y: m.mesh.rotation.y, z: m.mesh.rotation.z },
+      data: m.data
+    }));
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'collision_meshes.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('import-meshes')?.addEventListener('click', () => {
+    document.getElementById('mesh-import-input').click();
+  });
+
+  document.getElementById('mesh-import-input')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        clearAllMeshes();
+
+        data.forEach(item => {
+          let mesh = null;
+          if (item.type === 'sphere') {
+            mesh = createSphere(
+              new THREE.Vector3(item.position.x, item.position.y, item.position.z),
+              item.data.radius
+            );
+          } else if (item.type === 'box') {
+            mesh = createBox(
+              new THREE.Vector3(item.position.x, item.position.y, item.position.z),
+              item.data.width,
+              item.data.height,
+              item.data.depth
+            );
+            mesh.rotation.set(item.rotation.x, item.rotation.y, item.rotation.z);
+          } else if (item.type === 'brush') {
+            const points = item.data.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+            mesh = createBrushStroke(points, item.data.width);
+          }
+
+          if (mesh) {
+            addMesh(mesh, item.type, item.data);
+          }
+        });
+      } catch (err) {
+        console.error('Failed to import meshes:', err);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('clear-meshes')?.addEventListener('click', () => {
+    if (confirm('Delete all created meshes?')) {
+      clearAllMeshes();
+    }
+  });
+
+  // Mouse interaction for tool usage
+  let isToolMouseDown = false;
+
+  renderer.domElement.addEventListener('mousedown', (event) => {
+    if (activeTool === 'none') return;
+
+    // Don't interfere with camera rotation
+    if (event.button !== 0) return;
+
+    isToolMouseDown = true;
+    isCreating = true;
+
+    const pos = getWorldPosition(event);
+    if (!pos) return;
+
+    creationStart = pos.clone();
+
+    if (activeTool === 'sphere') {
+      // Create preview sphere
+      previewMesh = createSphere(creationStart, 0.5);
+      previewMesh.material = previewMaterial.clone();
+      scene.add(previewMesh);
+    } else if (activeTool === 'box') {
+      // Create preview box
+      previewMesh = createBox(creationStart, 0.5, boxHeight, 0.5);
+      previewMesh.material = previewMaterial.clone();
+      scene.add(previewMesh);
+    } else if (activeTool === 'brush') {
+      brushPoints.push(pos.clone());
+    }
+  });
+
+  renderer.domElement.addEventListener('mousemove', (event) => {
+    if (!isToolMouseDown || !isCreating || activeTool === 'none') return;
+
+    const pos = getWorldPosition(event);
+    if (!pos) return;
+
+    if (activeTool === 'sphere' && previewMesh) {
+      const radius = Math.max(0.5, creationStart.distanceTo(pos));
+      scene.remove(previewMesh);
+      previewMesh = createSphere(creationStart, radius);
+      previewMesh.material = previewMaterial.clone();
+      scene.add(previewMesh);
+    } else if (activeTool === 'box' && previewMesh) {
+      const dx = Math.abs(pos.x - creationStart.x);
+      const dz = Math.abs(pos.z - creationStart.z);
+      const width = Math.max(0.5, dx * 2);
+      const depth = Math.max(0.5, dz * 2);
+
+      scene.remove(previewMesh);
+      const center = new THREE.Vector3(
+        (creationStart.x + pos.x) / 2,
+        creationStart.y,
+        (creationStart.z + pos.z) / 2
+      );
+      previewMesh = createBox(center, width, boxHeight, depth);
+      previewMesh.material = previewMaterial.clone();
+      scene.add(previewMesh);
+    } else if (activeTool === 'brush') {
+      // Add point if far enough from last point
+      const lastPoint = brushPoints[brushPoints.length - 1];
+      if (lastPoint && pos.distanceTo(lastPoint) > 0.3) {
+        brushPoints.push(pos.clone());
+
+        // Update preview
+        if (previewMesh) scene.remove(previewMesh);
+        if (brushPoints.length >= 2) {
+          previewMesh = createBrushStroke(brushPoints, brushWidth);
+          if (previewMesh) {
+            previewMesh.material = previewMaterial.clone();
+            scene.add(previewMesh);
+          }
+        }
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', (event) => {
+    if (!isToolMouseDown || !isCreating || activeTool === 'none') {
+      isToolMouseDown = false;
+      return;
+    }
+
+    isToolMouseDown = false;
+    isCreating = false;
+
+    const pos = getWorldPosition(event);
+    if (!pos || !creationStart) {
+      clearPreview();
+      return;
+    }
+
+    // Finalize creation
+    if (activeTool === 'sphere') {
+      const radius = Math.max(0.5, creationStart.distanceTo(pos));
+      const mesh = createSphere(creationStart, radius);
+      addMesh(mesh, 'sphere', { radius, center: creationStart.clone() });
+    } else if (activeTool === 'box') {
+      const dx = Math.abs(pos.x - creationStart.x);
+      const dz = Math.abs(pos.z - creationStart.z);
+      const width = Math.max(0.5, dx * 2);
+      const depth = Math.max(0.5, dz * 2);
+      const center = new THREE.Vector3(
+        (creationStart.x + pos.x) / 2,
+        creationStart.y,
+        (creationStart.z + pos.z) / 2
+      );
+      const mesh = createBox(center, width, boxHeight, depth);
+      addMesh(mesh, 'box', { width, height: boxHeight, depth, center: center.clone() });
+    } else if (activeTool === 'brush' && brushPoints.length >= 2) {
+      const mesh = createBrushStroke(brushPoints, brushWidth);
+      if (mesh) {
+        addMesh(mesh, 'brush', { points: brushPoints.map(p => p.clone()), width: brushWidth });
+      }
+    }
+
+    clearPreview();
+  });
+
+  // Escape key to cancel
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      clearPreview();
+      isCreating = false;
+      isToolMouseDown = false;
+    }
+  });
+
+  // ===== COLLISION DETECTION WITH MESHES =====
+  function checkMeshCollision(x, y, z) {
+    const point = new THREE.Vector3(x, y, z);
+
+    for (const meshData of createdMeshes) {
+      const mesh = meshData.mesh;
+
+      if (meshData.type === 'sphere') {
+        const distance = point.distanceTo(mesh.position);
+        if (distance < meshData.data.radius) {
+          return true; // Inside sphere
+        }
+      } else if (meshData.type === 'box') {
+        // Create a bounding box and check
+        const box = new THREE.Box3().setFromObject(mesh);
+        if (box.containsPoint(point)) {
+          return true; // Inside box
+        }
+      } else if (meshData.type === 'brush') {
+        // Check distance to tube
+        const box = new THREE.Box3().setFromObject(mesh);
+        // Expand box slightly for tolerance
+        box.expandByScalar(0.2);
+        if (box.containsPoint(point)) {
+          return true; // Near brush stroke
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // Update checkCollision to include mesh collision
+  const originalCheckCollision = checkCollision;
+  function checkCollision(x, z) {
+    // Check grid-based collision
+    if (originalCheckCollision(x, z)) {
+      return true;
+    }
+
+    // Check mesh collision (use player height)
+    const y = player.position.y + 1.0; // Check at player center height
+    return checkMeshCollision(x, y, z);
+  }
+
   renderer.setAnimationLoop(function animate(time) {
     const dt = (time - lastTime) / 1000;
     lastTime = time;
@@ -579,6 +1644,7 @@
     updatePlayer(dt);
     updateDrone(dt);
     updateCamera();
+    updateCoordInfo();
 
     renderer.render(scene, camera);
   });
