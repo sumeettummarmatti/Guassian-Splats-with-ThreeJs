@@ -409,6 +409,16 @@
         Brush Width: <span class="value-display" id="brush-width-value">1.0</span>m
         <input type="range" id="brush-width" min="0.2" max="5" step="0.2" value="1.0">
       </label>
+
+      <label class="debug-checkbox"
+        style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px;">
+        <input type="checkbox" id="show-created-meshes">
+        Show Collision Meshes (Red)
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="show-selection-highlight" checked>
+        Show Selection Highlight (Yellow)
+      </label>
     </div>
 
     <div class="tool-hint" id="tool-hint">
@@ -430,7 +440,7 @@
 
   <script type="module">
     import * as THREE from "three";
-    import { SplatMesh } from "@sparkjsdev/spark";
+    import { SplatMesh, SplatEdit, SplatEditSdf, SplatEditSdfType, SplatEditRgbaBlendMode } from "@sparkjsdev/spark";
 
     const scene = new THREE.Scene();
 
@@ -1188,6 +1198,7 @@
     let createdMeshes = [];
     let meshIdCounter = 0;
     let previewMesh = null;
+    let previewSplatEdit = null; // For highlighting selection
     let isCreating = false;
     let creationStart = null;
     let brushPoints = [];
@@ -1233,6 +1244,8 @@
     const boxDepthValue = document.getElementById('box-depth-value');
     const brushWidthInput = document.getElementById('brush-width');
     const brushWidthValue = document.getElementById('brush-width-value');
+    const showCreatedMeshesCheckbox = document.getElementById('show-created-meshes');
+    const showSelectionHighlightCheckbox = document.getElementById('show-selection-highlight');
     const toolHint = document.getElementById('tool-hint');
     const meshCount = document.getElementById('mesh-count');
     const meshItems = document.getElementById('mesh-items');
@@ -1298,6 +1311,37 @@
     // Initialize tool settings display
     setActiveTool('none');
 
+    // Toggle visibility of created meshes
+    if (showCreatedMeshesCheckbox) {
+      showCreatedMeshesCheckbox.addEventListener('change', (e) => {
+        const visible = e.target.checked;
+        createdMeshes.forEach(m => {
+          m.mesh.visible = visible;
+        });
+      });
+    }
+
+    // Toggle visibility of selection highlight (yellow)
+    if (showSelectionHighlightCheckbox) {
+      showSelectionHighlightCheckbox.addEventListener('change', (e) => {
+        const visible = e.target.checked;
+        if (!currentSplat || !currentSplat.edits) return;
+
+        createdMeshes.forEach(m => {
+          if (m.data.splatEdit) {
+            const editIdx = currentSplat.edits.indexOf(m.data.splatEdit);
+            if (visible && editIdx === -1) {
+              // Add back if missing
+              currentSplat.edits.push(m.data.splatEdit);
+            } else if (!visible && editIdx !== -1) {
+              // Remove if present
+              currentSplat.edits.splice(editIdx, 1);
+            }
+          }
+        });
+      });
+    }
+
     // Raycaster for mouse interaction
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -1335,7 +1379,126 @@
         scene.remove(previewMesh);
         previewMesh = null;
       }
+      if (previewSplatEdit && currentSplat) {
+        // Remove edit from splat if it's still the preview one
+        if (currentSplat.edits) {
+          const idx = currentSplat.edits.indexOf(previewSplatEdit);
+          if (idx !== -1) currentSplat.edits.splice(idx, 1);
+        }
+        previewSplatEdit = null;
+      }
       brushPoints = [];
+    }
+
+    function addBrushCapsule(start, end, radius) {
+      if (!currentSplat) return;
+
+      // Initialize preview edit if needed
+      if (!previewSplatEdit) {
+        previewSplatEdit = new SplatEdit({
+          rgbaBlendMode: SplatEditRgbaBlendMode.SET_RGB,
+          sdfs: [],
+          softEdge: 0.2, // Softer edge for brush
+          name: 'Brush Selection'
+        });
+
+        if (!currentSplat.edits) currentSplat.edits = [];
+        currentSplat.edits.push(previewSplatEdit);
+      }
+
+      const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      if (length < 0.001) return;
+
+      direction.normalize();
+
+      // Align Y axis with direction
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+
+      // Transform to local space
+      const splatInverse = currentSplat.matrixWorld.clone().invert();
+      const localPos = center.clone().applyMatrix4(splatInverse);
+      const localRot = quaternion.clone().multiply(currentSplat.quaternion.clone().invert());
+
+      // Create Capsule SDF
+      const sdf = new SplatEditSdf({
+        type: SplatEditSdfType.CAPSULE,
+        opacity: 0.6, // Semi-transparent yellow
+        color: new THREE.Color(1.0, 1.0, 0.0), // Yellow
+        radius: radius,
+        displace: new THREE.Vector3(0, 0, 0)
+      });
+
+      // Set transform
+      sdf.position.copy(center); // Using world position as SplatEdit handles transform? 
+      // Wait, in updatePreviewSplatEdit I saw: 
+      // sdf.position.copy(position);
+      // And the comment: "For now, let's assume Splat is at origin/identity"
+      // If Splat is at origin, world == local.
+      // But if Splat is moved, we need to be careful.
+      // The SplatEdit system seems to expect world space transforms for the SDFs if they are children of the scene?
+      // No, SplatEditSdf is a child of SplatEdit? No, SplatEdit has a list of SDFs.
+      // SplatEditSdf extends Object3D.
+      // If they are not added to the scene graph, their matrixWorld is not auto-updated by Three.js renderer unless we do it.
+      // SplatEdit.ts calls `sdf.updateMatrixWorld()` manually.
+      // And it sets `sdf.scale` based on sizes.
+
+      sdf.position.copy(center);
+      sdf.quaternion.copy(quaternion);
+      sdf.scale.set(radius, length, radius); // y is length
+
+      previewSplatEdit.addSdf(sdf);
+    }
+
+    function updatePreviewSplatEdit(type, position, rotation, scale, radius) {
+      if (!currentSplat) return;
+
+      // Create edit if not exists
+      if (!previewSplatEdit) {
+        const sdf = new SplatEditSdf({
+          type: type === 'sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX,
+          opacity: 0.6,
+          color: new THREE.Color(1.0, 1.0, 0.0), // Yellow
+          radius: 0.0
+        });
+
+        previewSplatEdit = new SplatEdit({
+          rgbaBlendMode: SplatEditRgbaBlendMode.SET_RGB,
+          sdfs: [sdf],
+          softEdge: 0.1
+        });
+
+        if (!currentSplat.edits) currentSplat.edits = [];
+        currentSplat.edits.push(previewSplatEdit);
+      }
+
+      // Update SDF properties (assuming single SDF for sphere/box)
+      if (previewSplatEdit.sdfs.length === 0) {
+        const sdf = new SplatEditSdf({
+          type: type === 'sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX,
+          opacity: 0.6,
+          color: new THREE.Color(1.0, 1.0, 0.0), // Yellow
+          radius: 0.0
+        });
+        previewSplatEdit.addSdf(sdf);
+      }
+
+      const sdf = previewSplatEdit.sdfs[0];
+      sdf.type = type === 'sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX;
+      sdf.color.setHex(0xFFFF00); // Ensure yellow
+
+      sdf.position.copy(position);
+      sdf.rotation.copy(rotation);
+
+      if (type === 'sphere') {
+        sdf.radius = radius;
+        sdf.scale.setScalar(1);
+      } else {
+        sdf.scale.copy(scale);
+        sdf.radius = 0.1; // Rounding for box
+      }
     }
 
     function createSphere(center, radius) {
@@ -1373,6 +1536,12 @@
       };
 
       createdMeshes.push(meshData);
+
+      // Respect current visibility setting
+      if (showCreatedMeshesCheckbox) {
+        mesh.visible = showCreatedMeshesCheckbox.checked;
+      }
+
       scene.add(mesh);
       updateMeshList();
 
@@ -1382,14 +1551,33 @@
     function deleteMesh(id) {
       const index = createdMeshes.findIndex(m => m.id === id);
       if (index !== -1) {
-        scene.remove(createdMeshes[index].mesh);
+        const meshData = createdMeshes[index];
+        scene.remove(meshData.mesh);
+
+        // Remove associated SplatEdit if exists
+        if (meshData.data.splatEdit && currentSplat && currentSplat.edits) {
+          const editIdx = currentSplat.edits.indexOf(meshData.data.splatEdit);
+          if (editIdx !== -1) {
+            currentSplat.edits.splice(editIdx, 1);
+          }
+        }
+
         createdMeshes.splice(index, 1);
         updateMeshList();
       }
     }
 
     function clearAllMeshes() {
-      createdMeshes.forEach(m => scene.remove(m.mesh));
+      createdMeshes.forEach(m => {
+        scene.remove(m.mesh);
+        // Remove associated SplatEdit if exists
+        if (m.data.splatEdit && currentSplat && currentSplat.edits) {
+          const editIdx = currentSplat.edits.indexOf(m.data.splatEdit);
+          if (editIdx !== -1) {
+            currentSplat.edits.splice(editIdx, 1);
+          }
+        }
+      });
       createdMeshes = [];
       updateMeshList();
     }
@@ -1540,6 +1728,9 @@
         previewMesh = createSphere(creationStart, radius);
         previewMesh.material = previewMaterial.clone();
         scene.add(previewMesh);
+
+        updatePreviewSplatEdit('sphere', creationStart, new THREE.Euler(), new THREE.Vector3(1, 1, 1), radius);
+
       } else if (activeTool === 'box' && previewMesh) {
         const dx = Math.abs(pos.x - creationStart.x);
         const dz = Math.abs(pos.z - creationStart.z);
@@ -1555,19 +1746,29 @@
         previewMesh = createBox(center, width, boxHeight, depth);
         previewMesh.material = previewMaterial.clone();
         scene.add(previewMesh);
+
+        updatePreviewSplatEdit('box', center, new THREE.Euler(), new THREE.Vector3(width / 2, boxHeight / 2, depth / 2), 0);
+
       } else if (activeTool === 'brush') {
         // Add point if far enough from last point
         const lastPoint = brushPoints[brushPoints.length - 1];
-        if (!lastPoint || pos.distanceTo(lastPoint) > 0.1) {
+        // Smoother sampling: 0.05m instead of 0.1m
+        if (!lastPoint || pos.distanceTo(lastPoint) > 0.05) {
           brushPoints.push(pos.clone());
 
           // Update preview
           if (previewMesh) scene.remove(previewMesh);
           if (brushPoints.length >= 2) {
-            previewMesh = createBrushStroke(brushPoints, brushWidth);
-            if (previewMesh) {
-              previewMesh.material = previewMaterial.clone();
-              scene.add(previewMesh);
+            // Use CatmullRomCurve3 for smooth path
+            const curve = new THREE.CatmullRomCurve3(brushPoints);
+            // Higher tubular segments for smoothness
+            const geometry = new THREE.TubeGeometry(curve, brushPoints.length * 4, brushWidth / 2, 8, false);
+            previewMesh = new THREE.Mesh(geometry, previewMaterial.clone());
+            scene.add(previewMesh);
+
+            // Add capsule SDF for the new segment
+            if (lastPoint) {
+              addBrushCapsule(lastPoint, pos, brushWidth / 2);
             }
           }
         }
@@ -1607,9 +1808,22 @@
         const mesh = createBox(center, width, boxHeight, depth);
         addMesh(mesh, 'box', { width, height: boxHeight, depth, center: center.clone() });
       } else if (activeTool === 'brush' && brushPoints.length >= 2) {
-        const mesh = createBrushStroke(brushPoints, brushWidth);
+        // Create a dummy mesh for the brush to satisfy the addMesh structure
+        // The collision logic now handles the points directly without needing a mesh geometry
+        const mesh = new THREE.Group();
+        mesh.name = 'Brush Selection';
+
         if (mesh) {
-          addMesh(mesh, 'brush', { points: brushPoints.map(p => p.clone()), width: brushWidth });
+          // Persist the SplatEdit by detaching it from previewSplatEdit variable
+          // so clearPreview doesn't remove it from currentSplat.edits
+          const savedSplatEdit = previewSplatEdit;
+          previewSplatEdit = null; // Detach
+
+          addMesh(mesh, 'brush', {
+            points: brushPoints.map(p => p.clone()),
+            width: brushWidth,
+            splatEdit: savedSplatEdit // Store reference to remove later
+          });
         }
       }
 
@@ -1644,12 +1858,23 @@
             return true; // Inside box
           }
         } else if (meshData.type === 'brush') {
-          // Check distance to tube
-          const box = new THREE.Box3().setFromObject(mesh);
-          // Expand box slightly for tolerance
-          box.expandByScalar(0.2);
-          if (box.containsPoint(point)) {
-            return true; // Near brush stroke
+          // Check distance to each segment of the brush stroke
+          // This matches the Capsule SDFs used for the yellow highlight
+          const points = meshData.data.points;
+          const radius = meshData.data.width / 2;
+
+          for (let i = 0; i < points.length - 1; i++) {
+            const start = points[i];
+            const end = points[i + 1];
+
+            // Distance from point to line segment
+            const line = new THREE.Line3(start, end);
+            const closestPoint = new THREE.Vector3();
+            line.closestPointToPoint(point, true, closestPoint);
+
+            if (point.distanceTo(closestPoint) < radius) {
+              return true; // Inside capsule segment
+            }
           }
         }
       }
