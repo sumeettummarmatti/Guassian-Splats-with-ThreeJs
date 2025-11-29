@@ -4,6 +4,7 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #000;
     }
 
     #control-panel {
@@ -338,20 +339,24 @@
     <div id="debug-panel">
       <h3>Debug Visualization</h3>
       <label class="debug-checkbox">
-        <input type="checkbox" id="show-bounds" checked>
+        <input type="checkbox" id="show-bounding-box" checked>
         Show Bounding Box
       </label>
       <label class="debug-checkbox">
-        <input type="checkbox" id="show-grid" checked>
+        <input type="checkbox" id="show-coordinate-grid">
         Show Coordinate Grid
       </label>
       <label class="debug-checkbox">
-        <input type="checkbox" id="show-axes" checked>
+        <input type="checkbox" id="show-axis-helpers">
         Show Axis Helpers
       </label>
       <label class="debug-checkbox">
         <input type="checkbox" id="show-collision">
         Show Collision Grid
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="noclip">
+        Noclip (Walk Through Walls)
       </label>
 
       <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
@@ -368,6 +373,10 @@
           Z Offset: <span id="offset-z-value">0</span>m
           <input type="range" id="offset-z" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
         </label>
+        <div id="movement-debug"
+          style="position: absolute; top: 10px; right: 10px; color: lime; font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; pointer-events: none;">
+          Debug Info
+        </div>
       </div>
 
       <div id="coord-info"></div>
@@ -449,44 +458,15 @@
     let floorY = 0; // Will be updated from metadata
 
     async function loadCollisionMap() {
-      try {
-        const res = await fetch("collision_map.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch collision_map.json");
-        const data = await res.json();
-        collisionMap = data.map;
-        gridMetadata = data.metadata;
-
-        // Calculate world bounds from metadata
-        const minX = gridMetadata.min_x;
-        const minZ = gridMetadata.min_z;
-        const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
-        const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
-
-        // Update global floor height
-        if (gridMetadata.min_y !== undefined) {
-          floorY = gridMetadata.min_y;
-          console.log("Global floor height set to:", floorY);
-        }
-
-        return {
-          bbox: {
-            x: [minX, maxX],
-            y: [-100, 100],
-            z: [minZ, maxZ],
-          },
-          center: [(minX + maxX) / 2, 0, (minZ + maxZ) / 2],
-        };
-      } catch (err) {
-        console.warn("[collision] Failed to load collision_map.json", err);
-        return {
-          bbox: {
-            x: [-20, 20],
-            y: [-20, 20],
-            z: [-20, 20],
-          },
-          center: [0, 0, 0],
-        };
-      }
+      // Collision map removed as per user request
+      return {
+        bbox: {
+          x: [-1000, 1000],
+          y: [-100, 100],
+          z: [-1000, 1000],
+        },
+        center: [0, 0, 0],
+      };
     }
 
     const boundsData = await loadCollisionMap();
@@ -500,6 +480,7 @@
     );
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 1);
     document.body.appendChild(renderer.domElement);
 
     // simple lighting + ground for more "world" feeling
@@ -642,106 +623,23 @@
       return group;
     }
 
-    function createDirectionalLabels() {
-      if (!gridMetadata) return null;
-
-      const group = new THREE.Group();
-      const minX = gridMetadata.min_x;
-      const minZ = gridMetadata.min_z;
-      const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
-      const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
-      const centerX = (minX + maxX) / 2;
-      const centerZ = (minZ + maxZ) / 2;
-      const labelY = floorY + 0.5;
-
-      // Create canvas for text
-      function createTextSprite(text, color = '#ffffff', size = 64) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.font = `bold ${size}px Arial`;
-        ctx.fillStyle = color;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.SpriteMaterial({ map: texture });
-        const sprite = new THREE.Sprite(material);
-        sprite.scale.set(2, 1, 1);
-        return sprite;
-      }
-
-      // North (+Z)
-      const north = createTextSprite('NORTH (+Z)', '#00ffff');
-      north.position.set(centerX, labelY, maxZ + 1);
-      group.add(north);
-
-      // South (-Z)
-      const south = createTextSprite('SOUTH (-Z)', '#00ffff');
-      south.position.set(centerX, labelY, minZ - 1);
-      group.add(south);
-
-      // East (+X)
-      const east = createTextSprite('EAST (+X)', '#ffff00');
-      east.position.set(maxX + 1, labelY, centerZ);
-      group.add(east);
-
-      // West (-X)
-      const west = createTextSprite('WEST (-X)', '#ffff00');
-      west.position.set(minX - 1, labelY, centerZ);
-      group.add(west);
-
-      // Corner coordinate labels
-      const coordSize = 32;
-
-      // NE corner
-      const ne = createTextSprite(`(${maxX.toFixed(1)}, ${maxZ.toFixed(1)})`, '#ffffff', coordSize);
-      ne.position.set(maxX, labelY, maxZ);
-      ne.scale.set(1.5, 0.75, 1);
-      group.add(ne);
-
-      // NW corner
-      const nw = createTextSprite(`(${minX.toFixed(1)}, ${maxZ.toFixed(1)})`, '#ffffff', coordSize);
-      nw.position.set(minX, labelY, maxZ);
-      nw.scale.set(1.5, 0.75, 1);
-      group.add(nw);
-
-      // SE corner
-      const se = createTextSprite(`(${maxX.toFixed(1)}, ${minZ.toFixed(1)})`, '#ffffff', coordSize);
-      se.position.set(maxX, labelY, minZ);
-      se.scale.set(1.5, 0.75, 1);
-      group.add(se);
-
-      // SW corner
-      const sw = createTextSprite(`(${minX.toFixed(1)}, ${minZ.toFixed(1)})`, '#ffffff', coordSize);
-      sw.position.set(minX, labelY, minZ);
-      sw.scale.set(1.5, 0.75, 1);
-      group.add(sw);
-
-      return group;
-    }
+    // function createDirectionalLabels() { ... } // Removed
 
     // Initialize visualization objects
     boundingBox = createBoundingBox();
     gridHelper = createGridHelper();
     axesHelper = createAxesHelper();
-    let directionalLabels = createDirectionalLabels();
+    // let directionalLabels = createDirectionalLabels();
 
     if (boundingBox) scene.add(boundingBox);
     if (gridHelper) scene.add(gridHelper);
     if (axesHelper) scene.add(axesHelper);
-    if (directionalLabels) scene.add(directionalLabels);
+    // if (directionalLabels) scene.add(directionalLabels);
 
     // Hook up debug controls
-    const showBoundsCheckbox = document.getElementById('show-bounds');
-    const showGridCheckbox = document.getElementById('show-grid');
-    const showAxesCheckbox = document.getElementById('show-axes');
+    const showBoundsCheckbox = document.getElementById('show-bounding-box');
+    const showGridCheckbox = document.getElementById('show-coordinate-grid');
+    const showAxesCheckbox = document.getElementById('show-axis-helpers');
     const showCollisionCheckbox = document.getElementById('show-collision');
     const coordInfo = document.getElementById('coord-info');
 
@@ -799,6 +697,7 @@
       const playerY = player.position.y.toFixed(2);
       const playerZ = player.position.z.toFixed(2);
 
+      /*
       coordInfo.innerHTML = `
       <strong>Map Bounds:</strong><br>
       X: ${minX} to ${maxX}<br>
@@ -810,83 +709,398 @@
       <strong>Player Position:</strong><br>
       X: ${playerX}, Y: ${playerY}, Z: ${playerZ}
     `;
+    */
+      coordInfo.innerHTML = ''; // Clear it
     }
 
-    // simple "human" avatar for GTA-style third-person feeling
-    const player = new THREE.Group();
-    const playerScale = 0.7;
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x6fc3ff, metalness: 0.1, roughness: 0.4 });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x1c2a3d, roughness: 0.9 });
-    const accentMat = new THREE.MeshStandardMaterial({ color: 0xf25c54, roughness: 0.6 });
+    // 3D Robot Player
+    function createRobot() {
+      const robot = new THREE.Group();
 
-    const hips = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.25, 0.3), darkMat);
-    hips.position.y = 1.0;
-    player.add(hips);
+      // Materials
+      const blueMat = new THREE.MeshStandardMaterial({ color: 0x3399ff, roughness: 0.4 });
+      const darkBlueMat = new THREE.MeshStandardMaterial({ color: 0x1a3366, roughness: 0.6 });
+      const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3 });
+      const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, emissive: 0x222222 });
+      const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
 
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.8, 0.32), bodyMat);
-    torso.position.y = 1.55;
-    player.add(torso);
+      // Body (Cylinder-ish box)
+      const bodyGeo = new THREE.CylinderGeometry(0.3, 0.25, 0.6, 16);
+      const body = new THREE.Mesh(bodyGeo, blueMat);
+      body.position.y = 0.9; // Legs are approx 0.6m tall
+      robot.add(body);
 
-    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.1), accentMat);
-    chestPlate.position.set(0, 1.8, 0.21);
-    player.add(chestPlate);
+      // Chest plate (Yellow detail)
+      const chestGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+      const chest = new THREE.Mesh(chestGeo, yellowMat);
+      chest.position.set(0, 0.1, 0.25);
+      body.add(chest);
 
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
-    head.position.y = 2.15;
-    player.add(head);
+      // Head
+      const headGroup = new THREE.Group();
+      headGroup.position.y = 1.35;
+      robot.add(headGroup);
 
-    function makeArm(side) {
-      const sign = side === "left" ? -1 : 1;
-      const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.6, 12), bodyMat);
-      upper.rotation.z = Math.PI / 2;
-      upper.position.set(sign * 0.45, 1.65, 0);
-      player.add(upper);
+      // Head Main Box
+      const headGeo = new THREE.BoxGeometry(0.5, 0.4, 0.45);
+      const head = new THREE.Mesh(headGeo, blueMat);
+      headGroup.add(head);
 
-      const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.6, 12), darkMat);
-      lower.rotation.z = Math.PI / 2;
-      lower.position.set(sign * 0.45, 1.3, 0.05);
-      player.add(lower);
+      // Face Screen
+      const faceGeo = new THREE.BoxGeometry(0.4, 0.25, 0.05);
+      const face = new THREE.Mesh(faceGeo, whiteMat);
+      face.position.set(0, -0.02, 0.21);
+      headGroup.add(face);
 
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), accentMat);
-      hand.position.set(sign * 0.45, 1.05, 0.08);
-      player.add(hand);
+      // Eyes (Simple texture or just black dots on screen? Let's do simple geometry eyes)
+      const eyeGeo = new THREE.SphereGeometry(0.06, 16, 16);
+      const leftEye = new THREE.Mesh(eyeGeo, blackMat);
+      leftEye.position.set(-0.1, 0, 0.03);
+      leftEye.scale.z = 0.5;
+      face.add(leftEye);
+
+      const rightEye = new THREE.Mesh(eyeGeo, blackMat);
+      rightEye.position.set(0.1, 0, 0.03);
+      rightEye.scale.z = 0.5;
+      face.add(rightEye);
+
+      // Yellow Stripe on top
+      const stripeGeo = new THREE.BoxGeometry(0.15, 0.05, 0.46);
+      const stripe = new THREE.Mesh(stripeGeo, yellowMat);
+      stripe.position.y = 0.22;
+      headGroup.add(stripe);
+
+      // Antenna
+      const antStemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.2);
+      const antStem = new THREE.Mesh(antStemGeo, blackMat);
+      antStem.position.set(0, 0.3, 0);
+      headGroup.add(antStem);
+
+      const antBallGeo = new THREE.SphereGeometry(0.05);
+      const antBall = new THREE.Mesh(antBallGeo, yellowMat);
+      antBall.position.y = 0.1;
+      antStem.add(antBall);
+
+      // Ear Cups
+      const earGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16);
+      earGeo.rotateZ(Math.PI / 2);
+      const leftEar = new THREE.Mesh(earGeo, yellowMat);
+      leftEar.position.x = -0.28;
+      headGroup.add(leftEar);
+
+      const rightEar = new THREE.Mesh(earGeo, yellowMat);
+      rightEar.position.x = 0.28;
+      headGroup.add(rightEar);
+
+      // Arms
+      function createArm(side) {
+        const armGroup = new THREE.Group();
+        const xDir = side === 'left' ? -1 : 1;
+        armGroup.position.set(xDir * 0.35, 1.1, 0);
+
+        // Shoulder
+        const shoulderGeo = new THREE.SphereGeometry(0.12);
+        const shoulder = new THREE.Mesh(shoulderGeo, darkBlueMat);
+        armGroup.add(shoulder);
+
+        // Arm segment
+        const armGeo = new THREE.CylinderGeometry(0.08, 0.07, 0.4);
+        const arm = new THREE.Mesh(armGeo, blueMat);
+        arm.position.y = -0.25;
+        armGroup.add(arm);
+
+        // Hand
+        const handGeo = new THREE.SphereGeometry(0.1);
+        const hand = new THREE.Mesh(handGeo, darkBlueMat);
+        hand.position.y = -0.5;
+        armGroup.add(hand);
+
+        robot.add(armGroup);
+        return armGroup;
+      }
+
+      robot.userData.leftArm = createArm('left');
+      robot.userData.rightArm = createArm('right');
+
+      // Legs
+      function createLeg(side) {
+        const legGroup = new THREE.Group();
+        const xDir = side === 'left' ? -1 : 1;
+        legGroup.position.set(xDir * 0.15, 0.6, 0);
+
+        // Leg segment
+        const legGeo = new THREE.BoxGeometry(0.18, 0.5, 0.2);
+        const leg = new THREE.Mesh(legGeo, darkBlueMat);
+        leg.position.y = -0.25;
+        legGroup.add(leg);
+
+        // Foot
+        const footGeo = new THREE.BoxGeometry(0.2, 0.1, 0.3);
+        const foot = new THREE.Mesh(footGeo, yellowMat);
+        foot.position.set(0, -0.55, 0.05);
+        legGroup.add(foot);
+
+        robot.add(legGroup);
+        return legGroup;
+      }
+
+      robot.userData.leftLeg = createLeg('left');
+      robot.userData.rightLeg = createLeg('right');
+
+      return robot;
     }
-    makeArm("left");
-    makeArm("right");
 
-    function makeLeg(side) {
-      const sign = side === "left" ? -1 : 1;
-      const upper = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.25), darkMat);
-      upper.position.set(sign * 0.15, 0.7, 0);
-      player.add(upper);
+    const player = createRobot();
 
-      const lower = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.55, 0.23), bodyMat);
-      lower.position.set(sign * 0.15, 0.3, -0.02);
-      player.add(lower);
+    // Physics variables
+    let verticalVelocity = 0;
+    const gravity = -20.0; // m/s^2
+    const jumpForce = 8.0; // m/s
 
-      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.35), accentMat);
-      foot.position.set(sign * 0.15, 0.05, 0.1);
-      player.add(foot);
+    let isGrounded = false;
+    let walkTime = 0;
+
+    function updatePlayer(dt) {
+      if (viewMode === "drone") {
+        return; // player stays still in drone mode
+      }
+
+      const forwardDir = getForwardVector(false);
+      const rightDir = getRightVector();
+      let move = new THREE.Vector3();
+      let blocked = false;
+      let blockReason = "None";
+
+      if (keys.w) move.add(forwardDir);
+      if (keys.s) move.sub(forwardDir);
+      if (keys.a) move.sub(rightDir);
+      if (keys.d) move.add(rightDir);
+
+      // Jump Input
+      if (keys[' '] && isGrounded) {
+        verticalVelocity = jumpForce;
+        isGrounded = false;
+        console.log("Jump!");
+      }
+
+      // Apply Gravity
+      verticalVelocity += gravity * dt;
+      player.position.y += verticalVelocity * dt;
+
+      // Ground Collision / Landing
+      const groundY = getGroundHeight(player.position.x, player.position.z);
+
+      if (player.position.y <= groundY) {
+        player.position.y = groundY;
+        verticalVelocity = 0;
+        isGrounded = true;
+      } else {
+        isGrounded = false;
+      }
+
+      const isMoving = move.lengthSq() > 0;
+
+      if (isMoving) {
+        move.normalize().multiplyScalar(walkSpeed * dt);
+        walkTime += dt * 10; // Animation speed
+
+        // Predict next position
+        const nextPos = player.position.clone().add(move);
+
+        // Collision Radius Check (0.3m radius)
+        const radius = 0.3;
+        const checks = [
+          { x: nextPos.x, z: nextPos.z },
+          { x: nextPos.x + radius, z: nextPos.z },
+          { x: nextPos.x - radius, z: nextPos.z },
+          { x: nextPos.x, z: nextPos.z + radius },
+          { x: nextPos.x, z: nextPos.z - radius },
+        ];
+
+        // Noclip check
+        const noclip = document.getElementById('noclip')?.checked;
+
+        if (!noclip) {
+          for (const p of checks) {
+            // Check 0: Terrain/Mesh Slope Check
+            const nextGroundY = getGroundHeight(p.x, p.z);
+            const currentGroundY = getGroundHeight(player.position.x, player.position.z);
+
+            // Max step height (e.g., 0.5m)
+            const maxStepHeight = 0.5;
+
+            // If the ground at next position is too high relative to current FEET position, block it.
+            // We use currentGroundY as the reference for "where feet are".
+            // Note: player.position.y might be in the air (jumping), so we should compare ground-to-ground?
+            // Or if jumping, we can land on higher ground.
+            // If we are grounded, check step height.
+            // If we are in air, check if next ground is above current player Y (hitting a wall mid-air).
+
+            if (isGrounded) {
+              if (nextGroundY > currentGroundY + maxStepHeight) {
+                blocked = true;
+                blockReason = `Too High (dy=${(nextGroundY - currentGroundY).toFixed(2)})`;
+                break;
+              }
+            } else {
+              // In air - block if we hit a wall (ground is above our feet)
+              if (nextGroundY > player.position.y + 0.1) {
+                blocked = true;
+                blockReason = "Hit Wall In Air";
+                break;
+              }
+            }
+
+            const cell = getGridCell(p.x, p.z);
+
+            // Check 1: Is it an explicit obstacle?
+            if (cell && cell.b === 1) {
+              blocked = true;
+              blockReason = "Grid (b=1)";
+              break;
+            }
+          }
+        }
+
+        if (!blocked) {
+          player.position.add(move);
+          // Rotate player to face movement direction
+          // Smooth rotation
+          const targetAngle = Math.atan2(move.x, move.z);
+          // Simple lerp for rotation
+          let angleDiff = targetAngle - player.rotation.y;
+          // Normalize angle to -PI to PI
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          player.rotation.y += angleDiff * dt * 10;
+        }
+      } else {
+        // Reset animation when stopped
+        // walkTime = 0; // Optional: reset or pause
+        // Return limbs to neutral?
+        const damp = Math.min(1.0, dt * 10);
+        walkTime = 0; // Snap for now or lerp back
+      }
+
+      // Animate Limbs
+      if (player.userData.leftLeg) {
+        const legAngle = Math.sin(walkTime) * 0.5;
+        const armAngle = Math.sin(walkTime) * 0.5;
+
+        player.userData.leftLeg.rotation.x = legAngle;
+        player.userData.rightLeg.rotation.x = -legAngle;
+
+        player.userData.leftArm.rotation.x = -armAngle;
+        player.userData.rightArm.rotation.x = armAngle;
+      }
+
+      // Update debug info
+      const debugDiv = document.getElementById('movement-debug');
+      if (debugDiv) {
+        debugDiv.innerHTML = `
+          View: ${viewMode}<br>
+          Keys: W:${keys.w} A:${keys.a} S:${keys.s} D:${keys.d} Space:${keys[' ']}<br>
+          Last Key: ${lastKey}<br>
+          Pos: ${player.position.x.toFixed(2)}, ${player.position.y.toFixed(2)}, ${player.position.z.toFixed(2)}<br>
+          Vel Y: ${verticalVelocity.toFixed(2)}<br>
+          Grounded: ${isGrounded ? 'YES' : 'NO'}<br>
+          Blocked: ${blocked ? 'YES' : 'NO'} (${blockReason})<br>
+          Mesh Collision: ${checkMeshCollision(player.position.x, player.position.y + 0.75, player.position.z) ? 'YES' : 'NO'}<br>
+          Bounds X: [${worldBounds.x[0].toFixed(1)}, ${worldBounds.x[1].toFixed(1)}]<br>
+          Bounds Z: [${worldBounds.z[0].toFixed(1)}, ${worldBounds.z[1].toFixed(1)}]<br>
+          <button onclick="window.resetPlayer()" style="pointer-events: auto; margin-top: 5px;">Reset Player</button>
+        `;
+      }
+
+      clampToBounds(player.position);
     }
-    makeLeg("left");
-    makeLeg("right");
 
-    player.scale.set(playerScale, playerScale, playerScale);
-    player.position.set(0, floorY, 3);
+    function findSafeSpawn(startX, startZ) {
+      if (!gridMetadata || !collisionMap) return new THREE.Vector3(startX, floorY + 2, startZ);
+
+      // Check start pos first
+      const startCell = getGridCell(startX, startZ);
+      if (startCell && startCell.b !== 1) {
+        return new THREE.Vector3(startX, startCell.y + 0.1, startZ);
+      }
+
+      // Spiral search
+      const step = gridMetadata.grid_size;
+      let x = startX;
+      let z = startZ;
+      let dx = step;
+      let dz = 0;
+      let segmentLength = 1;
+      let segmentPassed = 0;
+
+      // Search up to 100 steps
+      for (let i = 0; i < 100; i++) {
+        x += dx;
+        z += dz;
+        segmentPassed++;
+
+        const cell = getGridCell(x, z);
+        if (cell && cell.b !== 1) {
+          return new THREE.Vector3(x, cell.y + 0.1, z);
+        }
+
+        if (segmentPassed === segmentLength) {
+          segmentPassed = 0;
+          // Rotate direction
+          const temp = dx;
+          dx = -dz;
+          dz = temp;
+          if (dz === 0) {
+            segmentLength++;
+          }
+        }
+      }
+
+      // Fallback
+      return new THREE.Vector3(startX, floorY + 2, startZ);
+    }
+
+    window.resetPlayer = function () {
+      const safePos = findSafeSpawn(0, 3); // Try (0,3) first as per original
+      player.position.copy(safePos);
+      player.position.y += 0.5; // Drop a bit
+      verticalVelocity = 0;
+      console.log(`Player reset to ${safePos.x}, ${safePos.y}, ${safePos.z}`);
+    };
+
+    // Initial position - wait for map load if possible, or just set default
+    // We can't await here easily, so we'll set a default and let the map load fix it later if needed?
+    // Actually, loadCollisionMap is awaited at the top level. So we are good.
+    const initialSpawn = findSafeSpawn(0, 3);
+    player.position.copy(initialSpawn);
+    player.position.y += 0.5;
     scene.add(player);
 
     let currentSplat = null;
 
     function loadSplat(url, fileName) {
+      console.log("Loading splat:", url);
       if (currentSplat) {
         scene.remove(currentSplat);
       }
 
-      const mesh = new SplatMesh({ url, fileName });
-      mesh.quaternion.set(1, 0, 0, 0);
-      mesh.position.set(0, 0, 0); // Reset to origin, let the points dictate height
-      scene.add(mesh);
-      currentSplat = mesh;
+      try {
+        const mesh = new SplatMesh({ url, fileName });
+        mesh.quaternion.set(1, 0, 0, 0);
+
+        // Apply current offsets
+        const x = parseFloat(document.getElementById('offset-x')?.value || 0);
+        const y = parseFloat(document.getElementById('offset-y')?.value || 0);
+        const z = parseFloat(document.getElementById('offset-z')?.value || 0);
+        mesh.position.set(x, y, z);
+
+        scene.add(mesh);
+        currentSplat = mesh;
+        console.log("Splat loaded successfully");
+      } catch (err) {
+        console.error("Failed to load splat:", err);
+        alert("Failed to load splat file. Check console for details.");
+      }
     }
 
     // initial file (default)
@@ -931,6 +1145,43 @@
       });
     }
 
+    // ===== ALIGNMENT CONTROLS =====
+    const offsetXInput = document.getElementById('offset-x');
+    const offsetYInput = document.getElementById('offset-y');
+    const offsetZInput = document.getElementById('offset-z');
+    const offsetXValue = document.getElementById('offset-x-value');
+    const offsetYValue = document.getElementById('offset-y-value');
+    const offsetZValue = document.getElementById('offset-z-value');
+
+    function updateSplatPosition() {
+      if (!currentSplat) return;
+      const x = parseFloat(offsetXInput.value);
+      const y = parseFloat(offsetYInput.value);
+      const z = parseFloat(offsetZInput.value);
+      currentSplat.position.set(x, y, z);
+    }
+
+    if (offsetXInput) {
+      offsetXInput.addEventListener('input', (e) => {
+        offsetXValue.textContent = e.target.value;
+        updateSplatPosition();
+      });
+    }
+
+    if (offsetYInput) {
+      offsetYInput.addEventListener('input', (e) => {
+        offsetYValue.textContent = e.target.value;
+        updateSplatPosition();
+      });
+    }
+
+    if (offsetZInput) {
+      offsetZInput.addEventListener('input', (e) => {
+        offsetZValue.textContent = e.target.value;
+        updateSplatPosition();
+      });
+    }
+
     // ===== GTA-style controls: first-person / third-person with WASD =====
     const firstPersonBtn = document.getElementById("first-person-btn");
     const thirdPersonBtn = document.getElementById("third-person-btn");
@@ -944,7 +1195,7 @@
     const maxPitch = Math.PI / 2 - 0.1;
 
     const keys = { w: false, a: false, s: false, d: false };
-    const walkSpeed = 3.0; // meters / second
+    const walkSpeed = 5.0; // meters / second
     const droneSpeed = 6.0;
     const firstPersonEyeHeight = 1.45;
 
@@ -975,11 +1226,14 @@
       droneBtn.addEventListener("click", () => setViewMode("drone"));
     }
 
+    let lastKey = "None";
     window.addEventListener("keydown", (event) => {
+      lastKey = event.code;
       if (event.code === "KeyW") keys.w = true;
       if (event.code === "KeyA") keys.a = true;
       if (event.code === "KeyS") keys.s = true;
       if (event.code === "KeyD") keys.d = true;
+      if (event.code === "Space") keys[' '] = true;
     });
 
     window.addEventListener("keyup", (event) => {
@@ -987,6 +1241,7 @@
       if (event.code === "KeyA") keys.a = false;
       if (event.code === "KeyS") keys.s = false;
       if (event.code === "KeyD") keys.d = false;
+      if (event.code === "Space") keys[' '] = false;
     });
 
     renderer.domElement.addEventListener("mousedown", (event) => {
@@ -1059,82 +1314,7 @@
       return false;
     }
 
-    function updatePlayer(dt) {
-      if (viewMode === "drone") {
-        return; // player stays still in drone mode
-      }
 
-      const forwardDir = getForwardVector(false);
-      const rightDir = getRightVector();
-      let move = new THREE.Vector3();
-
-      if (keys.w) move.add(forwardDir);
-      if (keys.s) move.sub(forwardDir);
-      if (keys.a) move.sub(rightDir);
-      if (keys.d) move.add(rightDir);
-
-      if (move.lengthSq() > 0) {
-        move.normalize().multiplyScalar(walkSpeed * dt);
-
-        // Predict next position
-        const nextPos = player.position.clone().add(move);
-
-        // Collision Radius Check (0.3m radius)
-        // Check center + 4 cardinal points
-        const radius = 0.3;
-        const checks = [
-          { x: nextPos.x, z: nextPos.z },
-          { x: nextPos.x + radius, z: nextPos.z },
-          { x: nextPos.x - radius, z: nextPos.z },
-          { x: nextPos.x, z: nextPos.z + radius },
-          { x: nextPos.x, z: nextPos.z - radius },
-        ];
-
-        let blocked = false;
-
-        // Get current floor height for step check
-        const currentCell = getGridCell(player.position.x, player.position.z);
-        const currentY = currentCell ? currentCell.y : floorY;
-
-        for (const p of checks) {
-          // Check 0: Mesh Collision (New)
-          // We check at the player's height (approx center of mass)
-          if (checkMeshCollision(p.x, player.position.y + 1.0, p.z)) {
-            blocked = true;
-            break;
-          }
-
-          const cell = getGridCell(p.x, p.z);
-
-          // Check 1: Is it an explicit obstacle?
-          if (cell && cell.b === 1) {
-            blocked = true;
-            break;
-          }
-
-          // Check 2: Is the step too high? (Slope check)
-          if (cell && Math.abs(cell.y - currentY) > 0.35) {
-            blocked = true;
-            break;
-          }
-        }
-
-        if (!blocked) {
-          player.position.add(move);
-          const angle = Math.atan2(move.x, move.z);
-          player.rotation.y = angle;
-        }
-      }
-
-      // Height Interpolation (GTA style)
-      const currentCell = getGridCell(player.position.x, player.position.z);
-      if (currentCell) {
-        const targetY = currentCell.y;
-        player.position.y += (targetY - player.position.y) * dt * 8.0;
-      }
-
-      clampToBounds(player.position);
-    }
 
     function updateDrone(dt) {
       if (viewMode !== "drone") return;
@@ -1147,19 +1327,38 @@
       if (keys.a) move.sub(rightDir);
       if (keys.d) move.add(rightDir);
 
+      const noclip = document.getElementById('noclip')?.checked;
+      let blocked = false;
+
       if (move.lengthSq() > 0) {
         move.normalize().multiplyScalar(droneSpeed * dt);
 
         const nextPos = dronePosition.clone().add(move);
 
         // Check mesh collision for drone too
-        if (!checkMeshCollision(nextPos.x, nextPos.y, nextPos.z)) {
+        if (noclip || !checkMeshCollision(nextPos.x, nextPos.y, nextPos.z)) {
           dronePosition.add(move);
+        } else {
+          blocked = true;
         }
       }
 
       dronePosition.y = Math.max(floorY + 0.5, Math.min(worldBounds.y[1], dronePosition.y));
       clampToBounds(dronePosition);
+
+      // Update debug info for drone
+      const debugDiv = document.getElementById('movement-debug');
+      if (debugDiv) {
+        debugDiv.innerHTML = `
+          View: ${viewMode}<br>
+          Keys: W:${keys.w} A:${keys.a} S:${keys.s} D:${keys.d}<br>
+          Pos: ${dronePosition.x.toFixed(2)}, ${dronePosition.y.toFixed(2)}, ${dronePosition.z.toFixed(2)}<br>
+          Blocked: ${blocked ? 'YES' : 'NO'}<br>
+          Noclip: ${noclip ? 'ON' : 'OFF'}<br>
+          Bounds X: [${worldBounds.x[0].toFixed(1)}, ${worldBounds.x[1].toFixed(1)}]<br>
+          Bounds Z: [${worldBounds.z[0].toFixed(1)}, ${worldBounds.z[1].toFixed(1)}]<br>
+        `;
+      }
     }
 
     function updateCamera() {
@@ -1537,10 +1736,10 @@
 
       createdMeshes.push(meshData);
 
-      // Respect current visibility setting
-      if (showCreatedMeshesCheckbox) {
-        mesh.visible = showCreatedMeshesCheckbox.checked;
-      }
+      // Respect current visibility setting - REMOVED to keep meshes invisible by default
+      // if (showCreatedMeshesCheckbox) {
+      //   mesh.visible = showCreatedMeshesCheckbox.checked;
+      // }
 
       scene.add(mesh);
       updateMeshList();
@@ -1794,7 +1993,19 @@
       if (activeTool === 'sphere') {
         const radius = Math.max(0.5, creationStart.distanceTo(pos));
         const mesh = createSphere(creationStart, radius);
-        addMesh(mesh, 'sphere', { radius, center: creationStart.clone() });
+        mesh.visible = false; // Invisible but exists for raycasting
+        mesh.name = 'Sphere Selection';
+        collisionObjects.push(mesh);
+
+        // Persist SplatEdit
+        const savedSplatEdit = previewSplatEdit;
+        previewSplatEdit = null;
+
+        addMesh(mesh, 'sphere', {
+          radius,
+          center: creationStart.clone(),
+          splatEdit: savedSplatEdit
+        });
       } else if (activeTool === 'box') {
         const dx = Math.abs(pos.x - creationStart.x);
         const dz = Math.abs(pos.z - creationStart.z);
@@ -1805,13 +2016,29 @@
           creationStart.y,
           (creationStart.z + pos.z) / 2
         );
+
         const mesh = createBox(center, width, boxHeight, depth);
-        addMesh(mesh, 'box', { width, height: boxHeight, depth, center: center.clone() });
+        mesh.visible = false; // Invisible
+        mesh.name = 'Box Selection';
+        collisionObjects.push(mesh);
+
+        // Persist SplatEdit
+        const savedSplatEdit = previewSplatEdit;
+        previewSplatEdit = null;
+
+        addMesh(mesh, 'box', {
+          width,
+          height: boxHeight,
+          depth,
+          center: center.clone(),
+          splatEdit: savedSplatEdit
+        });
       } else if (activeTool === 'brush' && brushPoints.length >= 2) {
-        // Create a dummy mesh for the brush to satisfy the addMesh structure
-        // The collision logic now handles the points directly without needing a mesh geometry
-        const mesh = new THREE.Group();
+        // Create actual mesh for raycasting
+        const mesh = createBrushStroke(brushPoints, brushWidth);
+        mesh.visible = false; // Invisible
         mesh.name = 'Brush Selection';
+        collisionObjects.push(mesh);
 
         if (mesh) {
           // Persist the SplatEdit by detaching it from previewSplatEdit variable
@@ -1840,59 +2067,78 @@
     });
 
     // ===== COLLISION DETECTION WITH MESHES =====
-    function checkMeshCollision(x, y, z) {
-      const point = new THREE.Vector3(x, y, z);
+    const collisionObjects = []; // Array to hold invisible meshes for raycasting
 
-      for (const meshData of createdMeshes) {
-        const mesh = meshData.mesh;
+    function getGroundHeight(x, z) {
+      // 1. Check grid height first
+      let groundY = floorY;
+      const cell = getGridCell(x, z);
+      if (cell) {
+        groundY = cell.y;
+      }
 
-        if (meshData.type === 'sphere') {
-          const distance = point.distanceTo(mesh.position);
-          if (distance < meshData.data.radius) {
-            return true; // Inside sphere
-          }
-        } else if (meshData.type === 'box') {
-          // Create a bounding box and check
-          const box = new THREE.Box3().setFromObject(mesh);
-          if (box.containsPoint(point)) {
-            return true; // Inside box
-          }
-        } else if (meshData.type === 'brush') {
-          // Check distance to each segment of the brush stroke
-          // This matches the Capsule SDFs used for the yellow highlight
-          const points = meshData.data.points;
-          const radius = meshData.data.width / 2;
+      // 2. Raycast against collision meshes
+      if (collisionObjects.length > 0) {
+        const rayOrigin = new THREE.Vector3(x, 100, z);
+        const rayDir = new THREE.Vector3(0, -1, 0);
+        raycaster.set(rayOrigin, rayDir);
 
-          for (let i = 0; i < points.length - 1; i++) {
-            const start = points[i];
-            const end = points[i + 1];
-
-            // Distance from point to line segment
-            const line = new THREE.Line3(start, end);
-            const closestPoint = new THREE.Vector3();
-            line.closestPointToPoint(point, true, closestPoint);
-
-            if (point.distanceTo(closestPoint) < radius) {
-              return true; // Inside capsule segment
-            }
+        const intersects = raycaster.intersectObjects(collisionObjects, false);
+        if (intersects.length > 0) {
+          // Find the highest intersection point
+          // intersects are sorted by distance, so the first one is the highest (closest to 100)
+          const meshY = intersects[0].point.y;
+          if (meshY > groundY) {
+            groundY = meshY;
           }
         }
       }
 
+      return groundY;
+    }
+
+    function checkMeshCollision(x, y, z) {
+      // This function is now less critical for movement blocking if we use slope check
+      // But we can still use it for "ceiling" checks or explicit walls if needed.
+      // For now, let's rely on getGroundHeight for floor/stairs.
+      // We might still want to block if we hit the SIDE of a mesh?
+      // Raycast down handles "on top". 
+      // To handle "hitting a wall", we need to check if the step up is too high.
       return false;
     }
 
-
-
     renderer.setAnimationLoop(function animate(time) {
-      const dt = (time - lastTime) / 1000;
-      lastTime = time;
+      try {
+        const dt = (time - lastTime) / 1000;
+        lastTime = time;
 
-      updatePlayer(dt);
-      updateDrone(dt);
-      updateCamera();
-      updateCoordInfo();
+        updatePlayer(dt);
+        updateDrone(dt);
+        updateCamera();
+        // updateCoordInfo(); // Removed
 
-      renderer.render(scene, camera);
+        renderer.render(scene, camera);
+      } catch (err) {
+        const debugDiv = document.getElementById('movement-debug');
+        if (debugDiv) {
+          debugDiv.innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
+          debugDiv.style.backgroundColor = "rgba(0,0,0,0.8)";
+        }
+        console.error(err);
+        renderer.setAnimationLoop(null); // Stop loop
+      }
     });
+    // Global Error Handler for Init
+    window.onerror = function (message, source, lineno, colno, error) {
+      const debugDiv = document.getElementById('movement-debug');
+      if (debugDiv) {
+        debugDiv.innerHTML = `<span style="color:red; font-weight:bold;">CRITICAL ERROR: ${message} at line ${lineno}</span>`;
+        debugDiv.style.display = 'block';
+      } else {
+        console.error(`CRITICAL ERROR: ${message} at line ${lineno}`);
+      }
+    };
   </script>
+  </body>
+
+  </html>
