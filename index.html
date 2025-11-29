@@ -1,108 +1,316 @@
-<style>
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #000;
+    }
 
-  #control-panel {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    padding: 12px 14px;
-    background: rgba(0, 0, 0, 0.75);
-    color: #f5f5f5;
-    border-radius: 8px;
-    max-width: 320px;
-    z-index: 10;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  }
+    #control-panel {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #f5f5f5;
+      border-radius: 8px;
+      max-width: 320px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
 
-  #control-panel h2 {
-    margin: 0 0 8px;
-    font-size: 14px;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: #c0c0ff;
-  }
+    #control-panel h2 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #c0c0ff;
+    }
 
-  #control-panel label {
-    display: block;
-    font-size: 12px;
-    margin-bottom: 4px;
-    color: #e0e0ff;
-  }
+    #control-panel label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: #e0e0ff;
+    }
 
-  #splat-url-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    font-size: 12px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(10, 10, 30, 0.9);
-    color: #f5f5f5;
-    outline: none;
-  }
+    #splat-url-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(10, 10, 30, 0.9);
+      color: #f5f5f5;
+      outline: none;
+    }
 
-  #splat-url-input:focus {
-    border-color: #7f5cff;
-    box-shadow: 0 0 0 1px rgba(127, 92, 255, 0.6);
-  }
+    #splat-url-input:focus {
+      border-color: #7f5cff;
+      box-shadow: 0 0 0 1px rgba(127, 92, 255, 0.6);
+    }
 
-  #load-splat-btn {
-    margin-top: 8px;
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    background: linear-gradient(135deg, #7f5cff, #ff5cf0);
-    color: #fff;
-    font-weight: 500;
-  }
+    #load-splat-btn {
+      margin-top: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7f5cff, #ff5cf0);
+      color: #fff;
+      font-weight: 500;
+    }
 
-  #load-splat-btn:hover {
-    filter: brightness(1.1);
-  }
+    #load-splat-btn:hover {
+      filter: brightness(1.1);
+    }
 
-  #control-panel small {
-    display: block;
-    margin-top: 6px;
-    font-size: 11px;
-    color: #c0c0c0;
-  }
+    #control-panel small {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #c0c0c0;
+    }
 
-  #view-buttons {
-    margin-top: 10px;
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+    #view-buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
 
-  .view-toggle-btn {
-    flex: 1 1 calc(33% - 4px);
-    padding: 6px 8px;
-    font-size: 11px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(20, 20, 40, 0.9);
-    color: #f5f5f5;
-    cursor: pointer;
-  }
+    .view-toggle-btn {
+      flex: 1 1 calc(33% - 4px);
+      padding: 6px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(20, 20, 40, 0.9);
+      color: #f5f5f5;
+      cursor: pointer;
+    }
 
-  .view-toggle-btn.active {
-    border-color: #7f5cff;
-    background: linear-gradient(135deg, #7f5cff, #ff5cf0);
-  }
+    .view-toggle-btn.active {
+      border-color: #7f5cff;
+      background: linear-gradient(135deg, #7f5cff, #ff5cf0);
+    }
 
-  #controls-hint {
-    margin-top: 8px;
-    font-size: 11px;
-    color: #a0ffcb;
-  }
-</style>
-<script type="importmap">
+    #controls-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #a0ffcb;
+    }
+
+    #debug-panel {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    #debug-panel h3 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #ffc080;
+    }
+
+    .debug-checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 11px;
+      color: #e0e0ff;
+      cursor: pointer;
+    }
+
+    .debug-checkbox input {
+      margin-right: 6px;
+      cursor: pointer;
+    }
+
+    #coord-info {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+      color: #a0ffa0;
+      line-height: 1.4;
+    }
+
+    #mesh-tools-panel {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #f5f5f5;
+      border-radius: 8px;
+      width: 280px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #mesh-tools-panel h2 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #ffc080;
+    }
+
+    .tool-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tool-btn {
+      padding: 10px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(20, 20, 40, 0.9);
+      color: #f5f5f5;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .tool-btn:hover {
+      border-color: rgba(127, 92, 255, 0.5);
+      background: rgba(30, 30, 50, 0.95);
+    }
+
+    .tool-btn.active {
+      border-color: #ff5cf0;
+      background: linear-gradient(135deg, #7f5cff, #ff5cf0);
+      box-shadow: 0 4px 12px rgba(255, 92, 240, 0.3);
+    }
+
+    .tool-settings {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .tool-settings label {
+      display: block;
+      font-size: 11px;
+      margin-bottom: 8px;
+      color: #e0e0ff;
+    }
+
+    .tool-settings input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .tool-settings .value-display {
+      color: #7f5cff;
+      font-weight: 600;
+    }
+
+    #mesh-list {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    #mesh-list h3 {
+      margin: 0 0 8px;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #ffc080;
+    }
+
+    .mesh-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      background: rgba(20, 20, 40, 0.6);
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .mesh-item:hover {
+      background: rgba(30, 30, 50, 0.8);
+    }
+
+    .mesh-item-info {
+      flex: 1;
+    }
+
+    .mesh-item-type {
+      display: inline-block;
+      padding: 2px 6px;
+      margin-right: 6px;
+      background: rgba(127, 92, 255, 0.3);
+      border-radius: 3px;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .delete-mesh-btn {
+      padding: 2px 8px;
+      font-size: 10px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 92, 92, 0.5);
+      background: rgba(255, 92, 92, 0.2);
+      color: #ff5c5c;
+      cursor: pointer;
+    }
+
+    .delete-mesh-btn:hover {
+      background: rgba(255, 92, 92, 0.4);
+    }
+
+    .mesh-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .mesh-action-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(20, 20, 40, 0.9);
+      color: #f5f5f5;
+      cursor: pointer;
+    }
+
+    .mesh-action-btn:hover {
+      background: rgba(30, 30, 50, 0.95);
+    }
+
+    .tool-hint {
+      margin-top: 12px;
+      padding: 8px;
+      background: rgba(127, 92, 255, 0.15);
+      border-left: 3px solid #7f5cff;
+      border-radius: 4px;
+      font-size: 10px;
+      line-height: 1.5;
+      color: #c0c0ff;
+    }
+  </style>
+  <script type="importmap">
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
@@ -111,475 +319,1826 @@
   }
 </script>
 
-<div id="control-panel">
-  <h2>Import my splat</h2>
-  <label for="splat-url-input">Splat / SPZ URL</label>
-  <input id="splat-url-input" type="text" value="https://sparkjs.dev/assets/splats/butterfly.spz"
-    placeholder="Paste your .spz URL here" />
-  <button id="load-splat-btn">Load file</button>
-  <small>You can paste your own URL here to import and view your file.</small>
-  <label for="splat-file-input" style="margin-top: 8px;">Or choose a file from your laptop</label>
-  <input id="splat-file-input" type="file" accept=".spz,.ply,.splat"
-    style="margin-top: 4px; font-size: 11px; color: #f5f5f5;" />
-  <div id="view-buttons">
-    <button id="first-person-btn" class="view-toggle-btn active">First person view</button>
-    <button id="third-person-btn" class="view-toggle-btn">Third person view</button>
-    <button id="drone-view-btn" class="view-toggle-btn">Drone view</button>
+  <div id="control-panel">
+    <h2>Import my splat</h2>
+    <label for="splat-url-input">Splat / SPZ URL</label>
+    <input id="splat-url-input" type="text" value="https://sparkjs.dev/assets/splats/butterfly.spz"
+      placeholder="Paste your .spz URL here" />
+    <button id="load-splat-btn">Load file</button>
+    <small>You can paste your own URL here to import and view your file.</small>
+    <label for="splat-file-input" style="margin-top: 8px;">Or choose a file from your laptop</label>
+    <input id="splat-file-input" type="file" accept=".spz,.ply,.splat"
+      style="margin-top: 4px; font-size: 11px; color: #f5f5f5;" />
+    <div id="view-buttons">
+      <button id="first-person-btn" class="view-toggle-btn active">First person view</button>
+      <button id="third-person-btn" class="view-toggle-btn">Third person view</button>
+      <button id="drone-view-btn" class="view-toggle-btn">Drone view</button>
+    </div>
+    <div id="controls-hint">WASD to move, drag mouse to aim. Drone view lets you fly with mouse pitch.</div>
+
+    <div id="debug-panel">
+      <h3>Debug Visualization</h3>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="show-bounding-box" checked>
+        Show Bounding Box
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="show-coordinate-grid">
+        Show Coordinate Grid
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="show-axis-helpers">
+        Show Axis Helpers
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="show-collision">
+        Show Collision Grid
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="noclip">
+        Noclip (Walk Through Walls)
+      </label>
+
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
+        <h3 style="margin: 0 0 8px; font-size: 11px; color: #ffc080;">Alignment Offset</h3>
+        <label style="display: block; font-size: 10px; margin-bottom: 4px;">
+          X Offset: <span id="offset-x-value">0</span>m
+          <input type="range" id="offset-x" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+        </label>
+        <label style="display: block; font-size: 10px; margin-bottom: 4px;">
+          Y Offset: <span id="offset-y-value">0</span>m
+          <input type="range" id="offset-y" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+        </label>
+        <label style="display: block; font-size: 10px; margin-bottom: 4px;">
+          Z Offset: <span id="offset-z-value">0</span>m
+          <input type="range" id="offset-z" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+        </label>
+        <div id="movement-debug"
+          style="position: absolute; top: 10px; right: 10px; color: lime; font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; pointer-events: none;">
+          Debug Info
+        </div>
+      </div>
+
+      <div id="coord-info"></div>
+    </div>
   </div>
-  <div id="controls-hint">WASD to move, drag mouse to aim. Drone view lets you fly with mouse pitch.</div>
-</div>
-<script type="module">
-  import * as THREE from "three";
-  import { SplatMesh } from "@sparkjsdev/spark";
 
-  const scene = new THREE.Scene();
+  <div id="mesh-tools-panel">
+    <h2>🔧 Mesh Tools</h2>
 
-  let collisionMap = null;
-  let gridMetadata = null;
-  let floorY = 0; // Will be updated from metadata
+    <div class="tool-buttons">
+      <button id="tool-none" class="tool-btn">None</button>
+      <button id="tool-sphere" class="tool-btn">🔵 Sphere</button>
+      <button id="tool-box" class="tool-btn">📦 Box</button>
+      <button id="tool-brush" class="tool-btn">🖌️ Brush</button>
+    </div>
 
-  async function loadCollisionMap() {
-    try {
-      const res = await fetch("collision_map.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to fetch collision_map.json");
-      const data = await res.json();
-      collisionMap = data.map;
-      gridMetadata = data.metadata;
+    <div class="tool-settings">
+      <label id="sphere-size-label">
+        Sphere Radius: <span class="value-display" id="sphere-size-value">2.0</span>m
+        <input type="range" id="sphere-size" min="0.5" max="10" step="0.5" value="2.0">
+      </label>
 
-      // Calculate world bounds from metadata
+      <label id="box-width-label">
+        Box Width: <span class="value-display" id="box-width-value">3.0</span>m
+        <input type="range" id="box-width" min="0.5" max="15" step="0.5" value="3.0">
+      </label>
+
+      <label id="box-height-label">
+        Box Height: <span class="value-display" id="box-height-value">2.5</span>m
+        <input type="range" id="box-height" min="0.5" max="10" step="0.5" value="2.5">
+      </label>
+
+      <label id="box-depth-label">
+        Box Depth: <span class="value-display" id="box-depth-value">3.0</span>m
+        <input type="range" id="box-depth" min="0.5" max="15" step="0.5" value="3.0">
+      </label>
+
+      <label id="brush-width-label">
+        Brush Width: <span class="value-display" id="brush-width-value">1.0</span>m
+        <input type="range" id="brush-width" min="0.2" max="5" step="0.2" value="1.0">
+      </label>
+
+      <label class="debug-checkbox"
+        style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px;">
+        <input type="checkbox" id="show-created-meshes">
+        Show Collision Meshes (Red)
+      </label>
+      <label class="debug-checkbox">
+        <input type="checkbox" id="show-selection-highlight" checked>
+        Show Selection Highlight (Yellow)
+      </label>
+    </div>
+
+    <div class="tool-hint" id="tool-hint">
+      Select a tool to create collision meshes
+    </div>
+
+    <div id="mesh-list">
+      <h3>Created Meshes (<span id="mesh-count">0</span>)</h3>
+      <div id="mesh-items"></div>
+      <div class="mesh-actions">
+        <button class="mesh-action-btn" id="export-meshes">💾 Export</button>
+        <button class="mesh-action-btn" id="import-meshes">📂 Import</button>
+        <button class="mesh-action-btn" id="clear-meshes">🗑️ Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="mesh-import-input" accept=".json" style="display: none;">
+
+  <script type="module">
+    import * as THREE from "three";
+    import { SplatMesh, SplatEdit, SplatEditSdf, SplatEditSdfType, SplatEditRgbaBlendMode } from "@sparkjsdev/spark";
+
+    const scene = new THREE.Scene();
+
+    let collisionMap = null;
+    let gridMetadata = null;
+    let floorY = 0; // Will be updated from metadata
+
+    async function loadCollisionMap() {
+      // Collision map removed as per user request
+      return {
+        bbox: {
+          x: [-1000, 1000],
+          y: [-100, 100],
+          z: [-1000, 1000],
+        },
+        center: [0, 0, 0],
+      };
+    }
+
+    const boundsData = await loadCollisionMap();
+    const worldBounds = boundsData.bbox;
+
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    );
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 1);
+    document.body.appendChild(renderer.domElement);
+
+    // simple lighting + ground for more "world" feeling
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambient);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    dirLight.position.set(5, 10, 5);
+    scene.add(dirLight);
+
+    const groundGeo = new THREE.PlaneGeometry(80, 80);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x101318,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = floorY; // Use the loaded floor height
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ===== DEBUG VISUALIZATION OBJECTS =====
+    let boundingBox = null;
+    let gridHelper = null;
+    let axesHelper = null;
+    let collisionGridGroup = null;
+
+    function createBoundingBox() {
+      if (!gridMetadata) return;
+
+      const minX = gridMetadata.min_x;
+      const minZ = gridMetadata.min_z;
+      const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
+      const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
+      const minY = gridMetadata.min_y || -5;
+
+      // Calculate actual Y extent from collision data
+      let actualMaxY = minY;
+      for (const cell of Object.values(collisionMap)) {
+        if (cell.y > actualMaxY) actualMaxY = cell.y;
+      }
+      const maxY = actualMaxY + 2; // Add 2m headroom
+
+      const width = maxX - minX;
+      const depth = maxZ - minZ;
+      const height = maxY - minY;
+
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      const edges = new THREE.EdgesGeometry(geometry);
+      const material = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+      const box = new THREE.LineSegments(edges, material);
+
+      box.position.set(
+        (minX + maxX) / 2,
+        (minY + maxY) / 2,
+        (minZ + maxZ) / 2
+      );
+
+      return box;
+    }
+
+    function createGridHelper() {
+      if (!gridMetadata) return;
+
       const minX = gridMetadata.min_x;
       const minZ = gridMetadata.min_z;
       const maxX = minX + gridMetadata.cols * gridMetadata.grid_size;
       const maxZ = minZ + gridMetadata.rows * gridMetadata.grid_size;
 
-      // Update global floor height
-      if (gridMetadata.min_y !== undefined) {
-        floorY = gridMetadata.min_y;
-        console.log("Global floor height set to:", floorY);
+      const width = maxX - minX;
+      const depth = maxZ - minZ;
+      const divisions = Math.max(gridMetadata.cols, gridMetadata.rows);
+
+      const grid = new THREE.GridHelper(
+        Math.max(width, depth),
+        Math.floor(divisions / 5), // Fewer divisions for clarity
+        0xffff00,
+        0x444444
+      );
+
+      grid.position.set(
+        (minX + maxX) / 2,
+        floorY,
+        (minZ + maxZ) / 2
+      );
+
+      return grid;
+    }
+
+    function createAxesHelper() {
+      const size = 2;
+      const axes = new THREE.AxesHelper(size);
+      axes.position.set(0, floorY + 0.01, 0);
+      return axes;
+    }
+
+    function createCollisionGrid() {
+      if (!gridMetadata || !collisionMap) return;
+
+      const group = new THREE.Group();
+      const cellSize = gridMetadata.grid_size;
+
+      // Create a single geometry for efficiency
+      const planeGeom = new THREE.PlaneGeometry(cellSize * 0.9, cellSize * 0.9);
+
+      // Don't sample - show all cells for accuracy
+      let blockedCount = 0;
+      let walkableCount = 0;
+
+      for (const [key, cell] of Object.entries(collisionMap)) {
+        const [c, r] = key.split(',').map(Number);
+
+        const x = gridMetadata.min_x + c * cellSize + cellSize / 2;
+        const z = gridMetadata.min_z + r * cellSize + cellSize / 2;
+        const y = cell.y + 0.01; // Slightly above the floor
+
+        // Color based on blocked status
+        const isBlocked = cell.b === 1;
+        const color = isBlocked ? 0xff4444 : 0x44ff44;
+        const opacity = isBlocked ? 0.7 : 0.2;
+
+        if (isBlocked) blockedCount++;
+        else walkableCount++;
+
+        const material = new THREE.MeshBasicMaterial({
+          color: color,
+          transparent: true,
+          opacity: opacity,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+
+        const plane = new THREE.Mesh(planeGeom, material);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.set(x, y, z);
+        group.add(plane);
       }
 
-      return {
-        bbox: {
-          x: [minX, maxX],
-          y: [-100, 100],
-          z: [minZ, maxZ],
-        },
-        center: [(minX + maxX) / 2, 0, (minZ + maxZ) / 2],
-      };
-    } catch (err) {
-      console.warn("[collision] Failed to load collision_map.json", err);
-      return {
-        bbox: {
-          x: [-20, 20],
-          y: [-20, 20],
-          z: [-20, 20],
-        },
-        center: [0, 0, 0],
-      };
-    }
-  }
-
-  const boundsData = await loadCollisionMap();
-  const worldBounds = boundsData.bbox;
-
-  const camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
-  );
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  // simple lighting + ground for more "world" feeling
-  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-  scene.add(ambient);
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-  dirLight.position.set(5, 10, 5);
-  scene.add(dirLight);
-
-  const groundGeo = new THREE.PlaneGeometry(80, 80);
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x101318,
-    roughness: 0.9,
-    metalness: 0.0,
-  });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = floorY; // Use the loaded floor height
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  // simple "human" avatar for GTA-style third-person feeling
-  const player = new THREE.Group();
-  const playerScale = 0.7;
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x6fc3ff, metalness: 0.1, roughness: 0.4 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x1c2a3d, roughness: 0.9 });
-  const accentMat = new THREE.MeshStandardMaterial({ color: 0xf25c54, roughness: 0.6 });
-
-  const hips = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.25, 0.3), darkMat);
-  hips.position.y = 1.0;
-  player.add(hips);
-
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.8, 0.32), bodyMat);
-  torso.position.y = 1.55;
-  player.add(torso);
-
-  const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.1), accentMat);
-  chestPlate.position.set(0, 1.8, 0.21);
-  player.add(chestPlate);
-
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
-  head.position.y = 2.15;
-  player.add(head);
-
-  function makeArm(side) {
-    const sign = side === "left" ? -1 : 1;
-    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.6, 12), bodyMat);
-    upper.rotation.z = Math.PI / 2;
-    upper.position.set(sign * 0.45, 1.65, 0);
-    player.add(upper);
-
-    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.6, 12), darkMat);
-    lower.rotation.z = Math.PI / 2;
-    lower.position.set(sign * 0.45, 1.3, 0.05);
-    player.add(lower);
-
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), accentMat);
-    hand.position.set(sign * 0.45, 1.05, 0.08);
-    player.add(hand);
-  }
-  makeArm("left");
-  makeArm("right");
-
-  function makeLeg(side) {
-    const sign = side === "left" ? -1 : 1;
-    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.25), darkMat);
-    upper.position.set(sign * 0.15, 0.7, 0);
-    player.add(upper);
-
-    const lower = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.55, 0.23), bodyMat);
-    lower.position.set(sign * 0.15, 0.3, -0.02);
-    player.add(lower);
-
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.35), accentMat);
-    foot.position.set(sign * 0.15, 0.05, 0.1);
-    player.add(foot);
-  }
-  makeLeg("left");
-  makeLeg("right");
-
-  player.scale.set(playerScale, playerScale, playerScale);
-  player.position.set(0, floorY, 3);
-  scene.add(player);
-
-  let currentSplat = null;
-
-  function loadSplat(url) {
-    if (currentSplat) {
-      scene.remove(currentSplat);
+      console.log(`Collision grid: ${blockedCount} blocked, ${walkableCount} walkable cells`);
+      return group;
     }
 
-    const mesh = new SplatMesh({ url });
-    mesh.quaternion.set(1, 0, 0, 0);
-    mesh.position.set(0, 0, 0); // Reset to origin, let the points dictate height
-    scene.add(mesh);
-    currentSplat = mesh;
-  }
+    // function createDirectionalLabels() { ... } // Removed
 
-  // initial file (default)
-  const defaultURL = "https://sparkjs.dev/assets/splats/butterfly.spz";
-  loadSplat(defaultURL);
+    // Initialize visualization objects
+    boundingBox = createBoundingBox();
+    gridHelper = createGridHelper();
+    axesHelper = createAxesHelper();
+    // let directionalLabels = createDirectionalLabels();
 
-  // hook up the small “import my file” panel
-  const input = document.getElementById("splat-url-input");
-  const button = document.getElementById("load-splat-btn");
-  const fileInput = document.getElementById("splat-file-input");
+    if (boundingBox) scene.add(boundingBox);
+    if (gridHelper) scene.add(gridHelper);
+    if (axesHelper) scene.add(axesHelper);
+    // if (directionalLabels) scene.add(directionalLabels);
 
-  if (input && button) {
-    button.addEventListener("click", () => {
-      const url = input.value.trim();
-      if (!url) return;
-      loadSplat(url);
-    });
+    // Hook up debug controls
+    const showBoundsCheckbox = document.getElementById('show-bounding-box');
+    const showGridCheckbox = document.getElementById('show-coordinate-grid');
+    const showAxesCheckbox = document.getElementById('show-axis-helpers');
+    const showCollisionCheckbox = document.getElementById('show-collision');
+    const coordInfo = document.getElementById('coord-info');
 
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
+    if (showBoundsCheckbox) {
+      showBoundsCheckbox.addEventListener('change', (e) => {
+        if (boundingBox) boundingBox.visible = e.target.checked;
+      });
+    }
+
+    if (showGridCheckbox) {
+      showGridCheckbox.addEventListener('change', (e) => {
+        if (gridHelper) gridHelper.visible = e.target.checked;
+      });
+    }
+
+    if (showAxesCheckbox) {
+      showAxesCheckbox.addEventListener('change', (e) => {
+        if (axesHelper) axesHelper.visible = e.target.checked;
+      });
+    }
+
+    if (showCollisionCheckbox) {
+      showCollisionCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          if (!collisionGridGroup) {
+            collisionGridGroup = createCollisionGrid();
+            if (collisionGridGroup) scene.add(collisionGridGroup);
+          } else {
+            collisionGridGroup.visible = true;
+          }
+        } else {
+          if (collisionGridGroup) collisionGridGroup.visible = false;
+        }
+      });
+    }
+
+    // Update coordinate info display
+    function updateCoordInfo() {
+      if (!coordInfo || !gridMetadata) return;
+
+      const minX = gridMetadata.min_x.toFixed(2);
+      const minZ = gridMetadata.min_z.toFixed(2);
+      const maxX = (gridMetadata.min_x + gridMetadata.cols * gridMetadata.grid_size).toFixed(2);
+      const maxZ = (gridMetadata.min_z + gridMetadata.rows * gridMetadata.grid_size).toFixed(2);
+
+      // Calculate actual Y range from collision data
+      let minY = gridMetadata.min_y;
+      let maxY = gridMetadata.min_y;
+      for (const cell of Object.values(collisionMap)) {
+        if (cell.y < minY) minY = cell.y;
+        if (cell.y > maxY) maxY = cell.y;
+      }
+
+      const playerX = player.position.x.toFixed(2);
+      const playerY = player.position.y.toFixed(2);
+      const playerZ = player.position.z.toFixed(2);
+
+      /*
+      coordInfo.innerHTML = `
+      <strong>Map Bounds:</strong><br>
+      X: ${minX} to ${maxX}<br>
+      Y: ${minY.toFixed(2)} to ${maxY.toFixed(2)}<br>
+      Z: ${minZ} to ${maxZ}<br>
+      Grid: ${gridMetadata.cols} × ${gridMetadata.rows}<br>
+      Cell Size: ${gridMetadata.grid_size}m<br>
+      <br>
+      <strong>Player Position:</strong><br>
+      X: ${playerX}, Y: ${playerY}, Z: ${playerZ}
+    `;
+    */
+      coordInfo.innerHTML = ''; // Clear it
+    }
+
+    // 3D Robot Player
+    function createRobot() {
+      const robot = new THREE.Group();
+
+      // Materials
+      const blueMat = new THREE.MeshStandardMaterial({ color: 0x3399ff, roughness: 0.4 });
+      const darkBlueMat = new THREE.MeshStandardMaterial({ color: 0x1a3366, roughness: 0.6 });
+      const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3 });
+      const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, emissive: 0x222222 });
+      const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+
+      // Body (Cylinder-ish box)
+      const bodyGeo = new THREE.CylinderGeometry(0.3, 0.25, 0.6, 16);
+      const body = new THREE.Mesh(bodyGeo, blueMat);
+      body.position.y = 0.9; // Legs are approx 0.6m tall
+      robot.add(body);
+
+      // Chest plate (Yellow detail)
+      const chestGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+      const chest = new THREE.Mesh(chestGeo, yellowMat);
+      chest.position.set(0, 0.1, 0.25);
+      body.add(chest);
+
+      // Head
+      const headGroup = new THREE.Group();
+      headGroup.position.y = 1.35;
+      robot.add(headGroup);
+
+      // Head Main Box
+      const headGeo = new THREE.BoxGeometry(0.5, 0.4, 0.45);
+      const head = new THREE.Mesh(headGeo, blueMat);
+      headGroup.add(head);
+
+      // Face Screen
+      const faceGeo = new THREE.BoxGeometry(0.4, 0.25, 0.05);
+      const face = new THREE.Mesh(faceGeo, whiteMat);
+      face.position.set(0, -0.02, 0.21);
+      headGroup.add(face);
+
+      // Eyes (Simple texture or just black dots on screen? Let's do simple geometry eyes)
+      const eyeGeo = new THREE.SphereGeometry(0.06, 16, 16);
+      const leftEye = new THREE.Mesh(eyeGeo, blackMat);
+      leftEye.position.set(-0.1, 0, 0.03);
+      leftEye.scale.z = 0.5;
+      face.add(leftEye);
+
+      const rightEye = new THREE.Mesh(eyeGeo, blackMat);
+      rightEye.position.set(0.1, 0, 0.03);
+      rightEye.scale.z = 0.5;
+      face.add(rightEye);
+
+      // Yellow Stripe on top
+      const stripeGeo = new THREE.BoxGeometry(0.15, 0.05, 0.46);
+      const stripe = new THREE.Mesh(stripeGeo, yellowMat);
+      stripe.position.y = 0.22;
+      headGroup.add(stripe);
+
+      // Antenna
+      const antStemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.2);
+      const antStem = new THREE.Mesh(antStemGeo, blackMat);
+      antStem.position.set(0, 0.3, 0);
+      headGroup.add(antStem);
+
+      const antBallGeo = new THREE.SphereGeometry(0.05);
+      const antBall = new THREE.Mesh(antBallGeo, yellowMat);
+      antBall.position.y = 0.1;
+      antStem.add(antBall);
+
+      // Ear Cups
+      const earGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16);
+      earGeo.rotateZ(Math.PI / 2);
+      const leftEar = new THREE.Mesh(earGeo, yellowMat);
+      leftEar.position.x = -0.28;
+      headGroup.add(leftEar);
+
+      const rightEar = new THREE.Mesh(earGeo, yellowMat);
+      rightEar.position.x = 0.28;
+      headGroup.add(rightEar);
+
+      // Arms
+      function createArm(side) {
+        const armGroup = new THREE.Group();
+        const xDir = side === 'left' ? -1 : 1;
+        armGroup.position.set(xDir * 0.35, 1.1, 0);
+
+        // Shoulder
+        const shoulderGeo = new THREE.SphereGeometry(0.12);
+        const shoulder = new THREE.Mesh(shoulderGeo, darkBlueMat);
+        armGroup.add(shoulder);
+
+        // Arm segment
+        const armGeo = new THREE.CylinderGeometry(0.08, 0.07, 0.4);
+        const arm = new THREE.Mesh(armGeo, blueMat);
+        arm.position.y = -0.25;
+        armGroup.add(arm);
+
+        // Hand
+        const handGeo = new THREE.SphereGeometry(0.1);
+        const hand = new THREE.Mesh(handGeo, darkBlueMat);
+        hand.position.y = -0.5;
+        armGroup.add(hand);
+
+        robot.add(armGroup);
+        return armGroup;
+      }
+
+      robot.userData.leftArm = createArm('left');
+      robot.userData.rightArm = createArm('right');
+
+      // Legs
+      function createLeg(side) {
+        const legGroup = new THREE.Group();
+        const xDir = side === 'left' ? -1 : 1;
+        legGroup.position.set(xDir * 0.15, 0.6, 0);
+
+        // Leg segment
+        const legGeo = new THREE.BoxGeometry(0.18, 0.5, 0.2);
+        const leg = new THREE.Mesh(legGeo, darkBlueMat);
+        leg.position.y = -0.25;
+        legGroup.add(leg);
+
+        // Foot
+        const footGeo = new THREE.BoxGeometry(0.2, 0.1, 0.3);
+        const foot = new THREE.Mesh(footGeo, yellowMat);
+        foot.position.set(0, -0.55, 0.05);
+        legGroup.add(foot);
+
+        robot.add(legGroup);
+        return legGroup;
+      }
+
+      robot.userData.leftLeg = createLeg('left');
+      robot.userData.rightLeg = createLeg('right');
+
+      return robot;
+    }
+
+    const player = createRobot();
+
+    // Physics variables
+    let verticalVelocity = 0;
+    const gravity = -20.0; // m/s^2
+    const jumpForce = 8.0; // m/s
+
+    let isGrounded = false;
+    let walkTime = 0;
+
+    function updatePlayer(dt) {
+      if (viewMode === "drone") {
+        return; // player stays still in drone mode
+      }
+
+      const forwardDir = getForwardVector(false);
+      const rightDir = getRightVector();
+      let move = new THREE.Vector3();
+      let blocked = false;
+      let blockReason = "None";
+
+      if (keys.w) move.add(forwardDir);
+      if (keys.s) move.sub(forwardDir);
+      if (keys.a) move.sub(rightDir);
+      if (keys.d) move.add(rightDir);
+
+      // Jump Input
+      if (keys[' '] && isGrounded) {
+        verticalVelocity = jumpForce;
+        isGrounded = false;
+        console.log("Jump!");
+      }
+
+      // Apply Gravity
+      verticalVelocity += gravity * dt;
+      player.position.y += verticalVelocity * dt;
+
+      // Ground Collision / Landing
+      const groundY = getGroundHeight(player.position.x, player.position.z);
+
+      if (player.position.y <= groundY) {
+        player.position.y = groundY;
+        verticalVelocity = 0;
+        isGrounded = true;
+      } else {
+        isGrounded = false;
+      }
+
+      const isMoving = move.lengthSq() > 0;
+
+      if (isMoving) {
+        move.normalize().multiplyScalar(walkSpeed * dt);
+        walkTime += dt * 10; // Animation speed
+
+        // Predict next position
+        const nextPos = player.position.clone().add(move);
+
+        // Collision Radius Check (0.3m radius)
+        const radius = 0.3;
+        const checks = [
+          { x: nextPos.x, z: nextPos.z },
+          { x: nextPos.x + radius, z: nextPos.z },
+          { x: nextPos.x - radius, z: nextPos.z },
+          { x: nextPos.x, z: nextPos.z + radius },
+          { x: nextPos.x, z: nextPos.z - radius },
+        ];
+
+        // Noclip check
+        const noclip = document.getElementById('noclip')?.checked;
+
+        if (!noclip) {
+          for (const p of checks) {
+            // Check 0: Terrain/Mesh Slope Check
+            const nextGroundY = getGroundHeight(p.x, p.z);
+            const currentGroundY = getGroundHeight(player.position.x, player.position.z);
+
+            // Max step height (e.g., 0.5m)
+            const maxStepHeight = 0.5;
+
+            // If the ground at next position is too high relative to current FEET position, block it.
+            // We use currentGroundY as the reference for "where feet are".
+            // Note: player.position.y might be in the air (jumping), so we should compare ground-to-ground?
+            // Or if jumping, we can land on higher ground.
+            // If we are grounded, check step height.
+            // If we are in air, check if next ground is above current player Y (hitting a wall mid-air).
+
+            if (isGrounded) {
+              if (nextGroundY > currentGroundY + maxStepHeight) {
+                blocked = true;
+                blockReason = `Too High (dy=${(nextGroundY - currentGroundY).toFixed(2)})`;
+                break;
+              }
+            } else {
+              // In air - block if we hit a wall (ground is above our feet)
+              if (nextGroundY > player.position.y + 0.1) {
+                blocked = true;
+                blockReason = "Hit Wall In Air";
+                break;
+              }
+            }
+
+            const cell = getGridCell(p.x, p.z);
+
+            // Check 1: Is it an explicit obstacle?
+            if (cell && cell.b === 1) {
+              blocked = true;
+              blockReason = "Grid (b=1)";
+              break;
+            }
+          }
+        }
+
+        if (!blocked) {
+          player.position.add(move);
+          // Rotate player to face movement direction
+          // Smooth rotation
+          const targetAngle = Math.atan2(move.x, move.z);
+          // Simple lerp for rotation
+          let angleDiff = targetAngle - player.rotation.y;
+          // Normalize angle to -PI to PI
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          player.rotation.y += angleDiff * dt * 10;
+        }
+      } else {
+        // Reset animation when stopped
+        // walkTime = 0; // Optional: reset or pause
+        // Return limbs to neutral?
+        const damp = Math.min(1.0, dt * 10);
+        walkTime = 0; // Snap for now or lerp back
+      }
+
+      // Animate Limbs
+      if (player.userData.leftLeg) {
+        const legAngle = Math.sin(walkTime) * 0.5;
+        const armAngle = Math.sin(walkTime) * 0.5;
+
+        player.userData.leftLeg.rotation.x = legAngle;
+        player.userData.rightLeg.rotation.x = -legAngle;
+
+        player.userData.leftArm.rotation.x = -armAngle;
+        player.userData.rightArm.rotation.x = armAngle;
+      }
+
+      // Update debug info
+      const debugDiv = document.getElementById('movement-debug');
+      if (debugDiv) {
+        debugDiv.innerHTML = `
+          View: ${viewMode}<br>
+          Keys: W:${keys.w} A:${keys.a} S:${keys.s} D:${keys.d} Space:${keys[' ']}<br>
+          Last Key: ${lastKey}<br>
+          Pos: ${player.position.x.toFixed(2)}, ${player.position.y.toFixed(2)}, ${player.position.z.toFixed(2)}<br>
+          Vel Y: ${verticalVelocity.toFixed(2)}<br>
+          Grounded: ${isGrounded ? 'YES' : 'NO'}<br>
+          Blocked: ${blocked ? 'YES' : 'NO'} (${blockReason})<br>
+          Mesh Collision: ${checkMeshCollision(player.position.x, player.position.y + 0.75, player.position.z) ? 'YES' : 'NO'}<br>
+          Bounds X: [${worldBounds.x[0].toFixed(1)}, ${worldBounds.x[1].toFixed(1)}]<br>
+          Bounds Z: [${worldBounds.z[0].toFixed(1)}, ${worldBounds.z[1].toFixed(1)}]<br>
+          <button onclick="window.resetPlayer()" style="pointer-events: auto; margin-top: 5px;">Reset Player</button>
+        `;
+      }
+
+      clampToBounds(player.position);
+    }
+
+    function findSafeSpawn(startX, startZ) {
+      if (!gridMetadata || !collisionMap) return new THREE.Vector3(startX, floorY + 2, startZ);
+
+      // Check start pos first
+      const startCell = getGridCell(startX, startZ);
+      if (startCell && startCell.b !== 1) {
+        return new THREE.Vector3(startX, startCell.y + 0.1, startZ);
+      }
+
+      // Spiral search
+      const step = gridMetadata.grid_size;
+      let x = startX;
+      let z = startZ;
+      let dx = step;
+      let dz = 0;
+      let segmentLength = 1;
+      let segmentPassed = 0;
+
+      // Search up to 100 steps
+      for (let i = 0; i < 100; i++) {
+        x += dx;
+        z += dz;
+        segmentPassed++;
+
+        const cell = getGridCell(x, z);
+        if (cell && cell.b !== 1) {
+          return new THREE.Vector3(x, cell.y + 0.1, z);
+        }
+
+        if (segmentPassed === segmentLength) {
+          segmentPassed = 0;
+          // Rotate direction
+          const temp = dx;
+          dx = -dz;
+          dz = temp;
+          if (dz === 0) {
+            segmentLength++;
+          }
+        }
+      }
+
+      // Fallback
+      return new THREE.Vector3(startX, floorY + 2, startZ);
+    }
+
+    window.resetPlayer = function () {
+      const safePos = findSafeSpawn(0, 3); // Try (0,3) first as per original
+      player.position.copy(safePos);
+      player.position.y += 0.5; // Drop a bit
+      verticalVelocity = 0;
+      console.log(`Player reset to ${safePos.x}, ${safePos.y}, ${safePos.z}`);
+    };
+
+    // Initial position - wait for map load if possible, or just set default
+    // We can't await here easily, so we'll set a default and let the map load fix it later if needed?
+    // Actually, loadCollisionMap is awaited at the top level. So we are good.
+    const initialSpawn = findSafeSpawn(0, 3);
+    player.position.copy(initialSpawn);
+    player.position.y += 0.5;
+    scene.add(player);
+
+    let currentSplat = null;
+
+    function loadSplat(url, fileName) {
+      console.log("Loading splat:", url);
+      if (currentSplat) {
+        scene.remove(currentSplat);
+      }
+
+      try {
+        const mesh = new SplatMesh({ url, fileName });
+        mesh.quaternion.set(1, 0, 0, 0);
+
+        // Apply current offsets
+        const x = parseFloat(document.getElementById('offset-x')?.value || 0);
+        const y = parseFloat(document.getElementById('offset-y')?.value || 0);
+        const z = parseFloat(document.getElementById('offset-z')?.value || 0);
+        mesh.position.set(x, y, z);
+
+        scene.add(mesh);
+        currentSplat = mesh;
+        console.log("Splat loaded successfully");
+      } catch (err) {
+        console.error("Failed to load splat:", err);
+        alert("Failed to load splat file. Check console for details.");
+      }
+    }
+
+    // initial file (default)
+    const defaultURL = "https://sparkjs.dev/assets/splats/butterfly.spz";
+    loadSplat(defaultURL);
+
+    // hook up the small “import my file” panel
+    const input = document.getElementById("splat-url-input");
+    const button = document.getElementById("load-splat-btn");
+    const fileInput = document.getElementById("splat-file-input");
+
+    if (input && button) {
+      button.addEventListener("click", () => {
         const url = input.value.trim();
         if (!url) return;
         loadSplat(url);
+      });
+
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const url = input.value.trim();
+          if (!url) return;
+          loadSplat(url);
+        }
+      });
+    }
+
+    // local file import: creates a temporary URL for the selected file
+    if (fileInput) {
+      fileInput.addEventListener("change", () => {
+        const files = fileInput.files;
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        const objectUrl = URL.createObjectURL(file);
+        loadSplat(objectUrl, file.name);
+        // optional: show that we're now using a local file instead of a remote URL
+        if (input) {
+          input.value = "";
+          input.placeholder = "Loaded from local file: " + file.name;
+        }
+      });
+    }
+
+    // ===== ALIGNMENT CONTROLS =====
+    const offsetXInput = document.getElementById('offset-x');
+    const offsetYInput = document.getElementById('offset-y');
+    const offsetZInput = document.getElementById('offset-z');
+    const offsetXValue = document.getElementById('offset-x-value');
+    const offsetYValue = document.getElementById('offset-y-value');
+    const offsetZValue = document.getElementById('offset-z-value');
+
+    function updateSplatPosition() {
+      if (!currentSplat) return;
+      const x = parseFloat(offsetXInput.value);
+      const y = parseFloat(offsetYInput.value);
+      const z = parseFloat(offsetZInput.value);
+      currentSplat.position.set(x, y, z);
+    }
+
+    if (offsetXInput) {
+      offsetXInput.addEventListener('input', (e) => {
+        offsetXValue.textContent = e.target.value;
+        updateSplatPosition();
+      });
+    }
+
+    if (offsetYInput) {
+      offsetYInput.addEventListener('input', (e) => {
+        offsetYValue.textContent = e.target.value;
+        updateSplatPosition();
+      });
+    }
+
+    if (offsetZInput) {
+      offsetZInput.addEventListener('input', (e) => {
+        offsetZValue.textContent = e.target.value;
+        updateSplatPosition();
+      });
+    }
+
+    // ===== GTA-style controls: first-person / third-person with WASD =====
+    const firstPersonBtn = document.getElementById("first-person-btn");
+    const thirdPersonBtn = document.getElementById("third-person-btn");
+    const droneBtn = document.getElementById("drone-view-btn");
+
+    let viewMode = "first"; // "first" | "third" | "drone"
+    let yaw = 0;
+    let pitch = 0;
+    const yawSpeed = 0.0025;
+    const pitchSpeed = 0.0025;
+    const maxPitch = Math.PI / 2 - 0.1;
+
+    const keys = { w: false, a: false, s: false, d: false };
+    const walkSpeed = 5.0; // meters / second
+    const droneSpeed = 6.0;
+    const firstPersonEyeHeight = 1.45;
+
+    let lastTime = performance.now();
+    let isMouseDown = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    const dronePosition = new THREE.Vector3(
+      boundsData.center?.[0] ?? 0,
+      floorY + 3,
+      (boundsData.center?.[2] ?? 0) + 6,
+    );
+
+    function setViewMode(mode) {
+      viewMode = mode;
+      player.visible = mode !== "first";
+      if (firstPersonBtn && thirdPersonBtn && droneBtn) {
+        firstPersonBtn.classList.toggle("active", mode === "first");
+        thirdPersonBtn.classList.toggle("active", mode === "third");
+        droneBtn.classList.toggle("active", mode === "drone");
       }
-    });
-  }
+    }
 
-  // local file import: creates a temporary URL for the selected file
-  if (fileInput) {
-    fileInput.addEventListener("change", () => {
-      const files = fileInput.files;
-      if (!files || files.length === 0) return;
-      const file = files[0];
-      const objectUrl = URL.createObjectURL(file);
-      loadSplat(objectUrl);
-      // optional: show that we're now using a local file instead of a remote URL
-      if (input) {
-        input.value = "";
-        input.placeholder = "Loaded from local file: " + file.name;
-      }
-    });
-  }
-
-  // ===== GTA-style controls: first-person / third-person with WASD =====
-  const firstPersonBtn = document.getElementById("first-person-btn");
-  const thirdPersonBtn = document.getElementById("third-person-btn");
-  const droneBtn = document.getElementById("drone-view-btn");
-
-  let viewMode = "first"; // "first" | "third" | "drone"
-  let yaw = 0;
-  let pitch = 0;
-  const yawSpeed = 0.0025;
-  const pitchSpeed = 0.0025;
-  const maxPitch = Math.PI / 2 - 0.1;
-
-  const keys = { w: false, a: false, s: false, d: false };
-  const walkSpeed = 3.0; // meters / second
-  const droneSpeed = 6.0;
-  const firstPersonEyeHeight = 1.45;
-
-  let lastTime = performance.now();
-  let isMouseDown = false;
-  let lastMouseX = 0;
-  let lastMouseY = 0;
-
-  const dronePosition = new THREE.Vector3(
-    boundsData.center?.[0] ?? 0,
-    floorY + 3,
-    (boundsData.center?.[2] ?? 0) + 6,
-  );
-
-  function setViewMode(mode) {
-    viewMode = mode;
-    player.visible = mode !== "first";
     if (firstPersonBtn && thirdPersonBtn && droneBtn) {
-      firstPersonBtn.classList.toggle("active", mode === "first");
-      thirdPersonBtn.classList.toggle("active", mode === "third");
-      droneBtn.classList.toggle("active", mode === "drone");
-    }
-  }
-
-  if (firstPersonBtn && thirdPersonBtn && droneBtn) {
-    firstPersonBtn.addEventListener("click", () => setViewMode("first"));
-    thirdPersonBtn.addEventListener("click", () => setViewMode("third"));
-    droneBtn.addEventListener("click", () => setViewMode("drone"));
-  }
-
-  window.addEventListener("keydown", (event) => {
-    if (event.code === "KeyW") keys.w = true;
-    if (event.code === "KeyA") keys.a = true;
-    if (event.code === "KeyS") keys.s = true;
-    if (event.code === "KeyD") keys.d = true;
-  });
-
-  window.addEventListener("keyup", (event) => {
-    if (event.code === "KeyW") keys.w = false;
-    if (event.code === "KeyA") keys.a = false;
-    if (event.code === "KeyS") keys.s = false;
-    if (event.code === "KeyD") keys.d = false;
-  });
-
-  renderer.domElement.addEventListener("mousedown", (event) => {
-    isMouseDown = true;
-    lastMouseX = event.clientX;
-    lastMouseY = event.clientY;
-  });
-
-  window.addEventListener("mouseup", () => {
-    isMouseDown = false;
-  });
-
-  window.addEventListener("mousemove", (event) => {
-    if (!isMouseDown) return;
-    const dx = event.clientX - lastMouseX;
-    const dy = event.clientY - lastMouseY;
-    lastMouseX = event.clientX;
-    lastMouseY = event.clientY;
-
-    yaw -= dx * yawSpeed;
-    pitch -= dy * pitchSpeed;
-    pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
-  });
-
-  function getForwardVector(includePitch = false) {
-    if (includePitch) {
-      return new THREE.Vector3(
-        Math.sin(yaw) * Math.cos(pitch),
-        Math.sin(pitch),
-        Math.cos(yaw) * Math.cos(pitch),
-      ).normalize();
-    }
-    return new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
-  }
-
-  function getRightVector() {
-    return new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)).normalize();
-  }
-
-  function clampToBounds(vector) {
-    vector.x = Math.max(worldBounds.x[0], Math.min(worldBounds.x[1], vector.x));
-    vector.z = Math.max(worldBounds.z[0], Math.min(worldBounds.z[1], vector.z));
-    // No obstacle box check here anymore
-  }
-
-  function getGridCell(x, z) {
-    if (!gridMetadata || !collisionMap) return null;
-    const c = Math.floor((x - gridMetadata.min_x) / gridMetadata.grid_size);
-    const r = Math.floor((z - gridMetadata.min_z) / gridMetadata.grid_size);
-    const key = `${c},${r}`;
-    return collisionMap[key];
-  }
-
-  function checkCollision(x, z) {
-    const cell = getGridCell(x, z);
-    return cell && cell.b === 1;
-  }
-
-  function updatePlayer(dt) {
-    if (viewMode === "drone") {
-      return; // player stays still in drone mode
+      firstPersonBtn.addEventListener("click", () => setViewMode("first"));
+      thirdPersonBtn.addEventListener("click", () => setViewMode("third"));
+      droneBtn.addEventListener("click", () => setViewMode("drone"));
     }
 
-    const forwardDir = getForwardVector(false);
-    const rightDir = getRightVector();
-    let move = new THREE.Vector3();
+    let lastKey = "None";
+    window.addEventListener("keydown", (event) => {
+      lastKey = event.code;
+      if (event.code === "KeyW") keys.w = true;
+      if (event.code === "KeyA") keys.a = true;
+      if (event.code === "KeyS") keys.s = true;
+      if (event.code === "KeyD") keys.d = true;
+      if (event.code === "Space") keys[' '] = true;
+    });
 
-    if (keys.w) move.add(forwardDir);
-    if (keys.s) move.sub(forwardDir);
-    if (keys.a) move.sub(rightDir);
-    if (keys.d) move.add(rightDir);
+    window.addEventListener("keyup", (event) => {
+      if (event.code === "KeyW") keys.w = false;
+      if (event.code === "KeyA") keys.a = false;
+      if (event.code === "KeyS") keys.s = false;
+      if (event.code === "KeyD") keys.d = false;
+      if (event.code === "Space") keys[' '] = false;
+    });
 
-    if (move.lengthSq() > 0) {
-      move.normalize().multiplyScalar(walkSpeed * dt);
+    renderer.domElement.addEventListener("mousedown", (event) => {
+      isMouseDown = true;
+      lastMouseX = event.clientX;
+      lastMouseY = event.clientY;
+    });
 
-      // Predict next position
-      const nextPos = player.position.clone().add(move);
+    window.addEventListener("mouseup", () => {
+      isMouseDown = false;
+    });
 
-      // Collision Radius Check (0.3m radius)
-      // Check center + 4 cardinal points
-      const radius = 0.3;
-      const checks = [
-        { x: nextPos.x, z: nextPos.z },
-        { x: nextPos.x + radius, z: nextPos.z },
-        { x: nextPos.x - radius, z: nextPos.z },
-        { x: nextPos.x, z: nextPos.z + radius },
-        { x: nextPos.x, z: nextPos.z - radius },
-      ];
+    window.addEventListener("mousemove", (event) => {
+      if (!isMouseDown) return;
+      const dx = event.clientX - lastMouseX;
+      const dy = event.clientY - lastMouseY;
+      lastMouseX = event.clientX;
+      lastMouseY = event.clientY;
 
+      yaw -= dx * yawSpeed;
+      pitch -= dy * pitchSpeed;
+      pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
+    });
+
+    function getForwardVector(includePitch = false) {
+      if (includePitch) {
+        return new THREE.Vector3(
+          Math.sin(yaw) * Math.cos(pitch),
+          Math.sin(pitch),
+          Math.cos(yaw) * Math.cos(pitch),
+        ).normalize();
+      }
+      return new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
+    }
+
+    function getRightVector() {
+      return new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)).normalize();
+    }
+
+    function clampToBounds(vector) {
+      vector.x = Math.max(worldBounds.x[0], Math.min(worldBounds.x[1], vector.x));
+      vector.z = Math.max(worldBounds.z[0], Math.min(worldBounds.z[1], vector.z));
+      // No obstacle box check here anymore
+    }
+
+    function getGridCell(x, z) {
+      if (!gridMetadata || !collisionMap) return null;
+      const c = Math.floor((x - gridMetadata.min_x) / gridMetadata.grid_size);
+      const r = Math.floor((z - gridMetadata.min_z) / gridMetadata.grid_size);
+      const key = `${c},${r}`;
+      return collisionMap[key];
+    }
+
+    function checkCollision(x, z) {
+      // Check grid-based collision
+      const cell = getGridCell(x, z);
+      if (cell && cell.b === 1) return true;
+
+      // Check mesh collision (use player height approx)
+      // We assume player is around y=1.0 relative to floor for body check
+      // But for general checkCollision(x,z) we might need a Y.
+      // Let's use a default Y or pass it in.
+      // For now, let's assume we are checking at a relevant height.
+      // But wait, checkCollision(x,z) is 2D.
+      // We should probably update checkCollision to take Y or check a range.
+      // However, updatePlayer calls getGridCell directly.
+
+      // Let's keep this simple: checkCollision checks grid.
+      // We will add explicit mesh checks in updatePlayer/updateDrone.
+      return false;
+    }
+
+
+
+    function updateDrone(dt) {
+      if (viewMode !== "drone") return;
+      const forwardDir = getForwardVector(true);
+      const rightDir = getRightVector();
+      let move = new THREE.Vector3();
+
+      if (keys.w) move.add(forwardDir);
+      if (keys.s) move.sub(forwardDir);
+      if (keys.a) move.sub(rightDir);
+      if (keys.d) move.add(rightDir);
+
+      const noclip = document.getElementById('noclip')?.checked;
       let blocked = false;
 
-      // Get current floor height for step check
-      const currentCell = getGridCell(player.position.x, player.position.z);
-      const currentY = currentCell ? currentCell.y : floorY;
+      if (move.lengthSq() > 0) {
+        move.normalize().multiplyScalar(droneSpeed * dt);
 
-      for (const p of checks) {
-        const cell = getGridCell(p.x, p.z);
+        const nextPos = dronePosition.clone().add(move);
 
-        // Check 1: Is it an explicit obstacle?
-        if (cell && cell.b === 1) {
+        // Check mesh collision for drone too
+        if (noclip || !checkMeshCollision(nextPos.x, nextPos.y, nextPos.z)) {
+          dronePosition.add(move);
+        } else {
           blocked = true;
-          break;
-        }
-
-        // Check 2: Is the step too high? (Slope check)
-        // If the target floor is > 0.3m higher/lower than current floor, block it.
-        // This prevents walking up steep walls or onto high objects like the elephant.
-        if (cell && Math.abs(cell.y - currentY) > 0.35) {
-          blocked = true;
-          break;
         }
       }
 
-      if (!blocked) {
-        player.position.add(move);
-        const angle = Math.atan2(move.x, move.z);
-        player.rotation.y = angle;
+      dronePosition.y = Math.max(floorY + 0.5, Math.min(worldBounds.y[1], dronePosition.y));
+      clampToBounds(dronePosition);
+
+      // Update debug info for drone
+      const debugDiv = document.getElementById('movement-debug');
+      if (debugDiv) {
+        debugDiv.innerHTML = `
+          View: ${viewMode}<br>
+          Keys: W:${keys.w} A:${keys.a} S:${keys.s} D:${keys.d}<br>
+          Pos: ${dronePosition.x.toFixed(2)}, ${dronePosition.y.toFixed(2)}, ${dronePosition.z.toFixed(2)}<br>
+          Blocked: ${blocked ? 'YES' : 'NO'}<br>
+          Noclip: ${noclip ? 'ON' : 'OFF'}<br>
+          Bounds X: [${worldBounds.x[0].toFixed(1)}, ${worldBounds.x[1].toFixed(1)}]<br>
+          Bounds Z: [${worldBounds.z[0].toFixed(1)}, ${worldBounds.z[1].toFixed(1)}]<br>
+        `;
+      }
+    }
+
+    function updateCamera() {
+      if (viewMode === "first") {
+        camera.position.set(
+          player.position.x,
+          player.position.y + firstPersonEyeHeight,
+          player.position.z,
+        );
+        const lookDir = getForwardVector(true);
+        const target = new THREE.Vector3().copy(camera.position).add(lookDir);
+        camera.lookAt(target);
+      } else if (viewMode === "third") {
+        const offset = new THREE.Vector3(0, 2.0, 6.0);
+        const rotY = new THREE.Matrix4().makeRotationY(yaw);
+        offset.applyMatrix4(rotY);
+
+        const focus = new THREE.Vector3(
+          player.position.x,
+          player.position.y + 1.4,
+          player.position.z,
+        );
+        const camPos = new THREE.Vector3().copy(focus).add(offset);
+        camera.position.copy(camPos);
+        camera.lookAt(focus);
       } else {
-        // Simple sliding: try moving just X or just Z
-        // (Optional refinement, for now just block)
+        camera.position.copy(dronePosition);
+        const lookDir = getForwardVector(true);
+        const target = new THREE.Vector3().copy(dronePosition).add(lookDir);
+        camera.lookAt(target);
       }
     }
 
-    // Height Interpolation (GTA style)
-    const currentCell = getGridCell(player.position.x, player.position.z);
-    if (currentCell) {
-      const targetY = currentCell.y;
-      // Smoothly interpolate current Y to target Y
-      // Speed 5.0 gives a nice snappy but smooth step up
-      player.position.y += (targetY - player.position.y) * dt * 8.0;
+    // ===== MESH TOOLS SYSTEM =====
+    let activeTool = 'none'; // 'none' | 'sphere' | 'box' | 'brush'
+    let createdMeshes = [];
+    let meshIdCounter = 0;
+    let previewMesh = null;
+    let previewSplatEdit = null; // For highlighting selection
+    let isCreating = false;
+    let creationStart = null;
+    let brushPoints = [];
+
+    // Tool settings
+    let sphereRadius = 2.0;
+    let boxWidth = 3.0;
+    let boxHeight = 2.5;
+    let boxDepth = 3.0;
+    let brushWidth = 1.0;
+
+    // Material for collision meshes
+    const collisionMaterial = new THREE.MeshStandardMaterial({
+      color: 0xff4444,
+      transparent: true,
+      opacity: 0.5,
+      roughness: 0.3,
+      metalness: 0.1
+    });
+
+    const previewMaterial = new THREE.MeshStandardMaterial({
+      color: 0x7f5cff,
+      transparent: true,
+      opacity: 0.3,
+      wireframe: false
+    });
+
+    // Get UI elements
+    const toolBtns = {
+      none: document.getElementById('tool-none'),
+      sphere: document.getElementById('tool-sphere'),
+      box: document.getElementById('tool-box'),
+      brush: document.getElementById('tool-brush')
+    };
+
+    const sphereSizeInput = document.getElementById('sphere-size');
+    const sphereSizeValue = document.getElementById('sphere-size-value');
+    const boxWidthInput = document.getElementById('box-width');
+    const boxWidthValue = document.getElementById('box-width-value');
+    const boxHeightInput = document.getElementById('box-height');
+    const boxHeightValue = document.getElementById('box-height-value');
+    const boxDepthInput = document.getElementById('box-depth');
+    const boxDepthValue = document.getElementById('box-depth-value');
+    const brushWidthInput = document.getElementById('brush-width');
+    const brushWidthValue = document.getElementById('brush-width-value');
+    const showCreatedMeshesCheckbox = document.getElementById('show-created-meshes');
+    const showSelectionHighlightCheckbox = document.getElementById('show-selection-highlight');
+    const toolHint = document.getElementById('tool-hint');
+    const meshCount = document.getElementById('mesh-count');
+    const meshItems = document.getElementById('mesh-items');
+
+    // Tool hints
+    const toolHints = {
+      none: 'Select a tool to create collision meshes',
+      sphere: 'Click and drag to create a sphere. Drag distance sets the radius.',
+      box: 'Click and drag to create a box. Drag distance sets the size.',
+      brush: 'Click and drag to paint a collision path along your mouse movement.'
+    };
+
+    // Set active tool
+    function setActiveTool(tool) {
+      activeTool = tool;
+      Object.keys(toolBtns).forEach(key => {
+        toolBtns[key]?.classList.toggle('active', key === tool);
+      });
+      toolHint.textContent = toolHints[tool];
+
+      // Show/hide relevant settings
+      document.getElementById('sphere-size-label').style.display = tool === 'sphere' ? 'block' : 'none';
+      document.getElementById('box-width-label').style.display = tool === 'box' ? 'block' : 'none';
+      document.getElementById('box-height-label').style.display = tool === 'box' ? 'block' : 'none';
+      document.getElementById('box-depth-label').style.display = tool === 'box' ? 'block' : 'none';
+      document.getElementById('brush-width-label').style.display = tool === 'brush' ? 'block' : 'none';
+
+      // Clear any ongoing creation
+      clearPreview();
     }
 
-    clampToBounds(player.position);
-  }
+    // Hook up tool buttons
+    Object.keys(toolBtns).forEach(tool => {
+      toolBtns[tool]?.addEventListener('click', () => setActiveTool(tool));
+    });
 
-  function updateDrone(dt) {
-    if (viewMode !== "drone") return;
-    const forwardDir = getForwardVector(true);
-    const rightDir = getRightVector();
-    let move = new THREE.Vector3();
+    // Hook up settings inputs
+    sphereSizeInput?.addEventListener('input', (e) => {
+      sphereRadius = parseFloat(e.target.value);
+      sphereSizeValue.textContent = sphereRadius.toFixed(1);
+    });
 
-    if (keys.w) move.add(forwardDir);
-    if (keys.s) move.sub(forwardDir);
-    if (keys.a) move.sub(rightDir);
-    if (keys.d) move.add(rightDir);
+    boxWidthInput?.addEventListener('input', (e) => {
+      boxWidth = parseFloat(e.target.value);
+      boxWidthValue.textContent = boxWidth.toFixed(1);
+    });
 
-    if (move.lengthSq() > 0) {
-      move.normalize().multiplyScalar(droneSpeed * dt);
-      dronePosition.add(move);
+    boxHeightInput?.addEventListener('input', (e) => {
+      boxHeight = parseFloat(e.target.value);
+      boxHeightValue.textContent = boxHeight.toFixed(1);
+    });
+
+    boxDepthInput?.addEventListener('input', (e) => {
+      boxDepth = parseFloat(e.target.value);
+      boxDepthValue.textContent = boxDepth.toFixed(1);
+    });
+
+    brushWidthInput?.addEventListener('input', (e) => {
+      brushWidth = parseFloat(e.target.value);
+      brushWidthValue.textContent = brushWidth.toFixed(1);
+    });
+
+    // Initialize tool settings display
+    setActiveTool('none');
+
+    // Toggle visibility of created meshes
+    if (showCreatedMeshesCheckbox) {
+      showCreatedMeshesCheckbox.addEventListener('change', (e) => {
+        const visible = e.target.checked;
+        createdMeshes.forEach(m => {
+          m.mesh.visible = visible;
+        });
+      });
     }
 
-    dronePosition.y = Math.max(floorY + 0.5, Math.min(worldBounds.y[1], dronePosition.y));
-    clampToBounds(dronePosition);
-  }
+    // Toggle visibility of selection highlight (yellow)
+    if (showSelectionHighlightCheckbox) {
+      showSelectionHighlightCheckbox.addEventListener('change', (e) => {
+        const visible = e.target.checked;
+        if (!currentSplat || !currentSplat.edits) return;
 
-  function updateCamera() {
-    if (viewMode === "first") {
-      camera.position.set(
-        player.position.x,
-        player.position.y + firstPersonEyeHeight,
-        player.position.z,
-      );
-      const lookDir = getForwardVector(true);
-      const target = new THREE.Vector3().copy(camera.position).add(lookDir);
-      camera.lookAt(target);
-    } else if (viewMode === "third") {
-      const offset = new THREE.Vector3(0, 2.0, 6.0);
-      const rotY = new THREE.Matrix4().makeRotationY(yaw);
-      offset.applyMatrix4(rotY);
-
-      const focus = new THREE.Vector3(
-        player.position.x,
-        player.position.y + 1.4,
-        player.position.z,
-      );
-      const camPos = new THREE.Vector3().copy(focus).add(offset);
-      camera.position.copy(camPos);
-      camera.lookAt(focus);
-    } else {
-      camera.position.copy(dronePosition);
-      const lookDir = getForwardVector(true);
-      const target = new THREE.Vector3().copy(dronePosition).add(lookDir);
-      camera.lookAt(target);
+        createdMeshes.forEach(m => {
+          if (m.data.splatEdit) {
+            const editIdx = currentSplat.edits.indexOf(m.data.splatEdit);
+            if (visible && editIdx === -1) {
+              // Add back if missing
+              currentSplat.edits.push(m.data.splatEdit);
+            } else if (!visible && editIdx !== -1) {
+              // Remove if present
+              currentSplat.edits.splice(editIdx, 1);
+            }
+          }
+        });
+      });
     }
-  }
 
-  renderer.setAnimationLoop(function animate(time) {
-    const dt = (time - lastTime) / 1000;
-    lastTime = time;
+    // Raycaster for mouse interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
-    updatePlayer(dt);
-    updateDrone(dt);
-    updateCamera();
+    // Get 3D position from mouse
+    function getWorldPosition(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    renderer.render(scene, camera);
-  });
-</script>
+      raycaster.setFromCamera(mouse, camera);
+
+      // 1. Try raycasting against the splat mesh first
+      if (currentSplat) {
+        const intersects = [];
+        currentSplat.raycast(raycaster, intersects);
+        if (intersects.length > 0) {
+          // Sort by distance
+          intersects.sort((a, b) => a.distance - b.distance);
+          return intersects[0].point;
+        }
+      }
+
+      // 2. Fallback: Create an invisible ground plane to raycast against
+      const planeY = floorY;
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
+      const intersection = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, intersection);
+
+      return intersection;
+    }
+
+    function clearPreview() {
+      if (previewMesh) {
+        scene.remove(previewMesh);
+        previewMesh = null;
+      }
+      if (previewSplatEdit && currentSplat) {
+        // Remove edit from splat if it's still the preview one
+        if (currentSplat.edits) {
+          const idx = currentSplat.edits.indexOf(previewSplatEdit);
+          if (idx !== -1) currentSplat.edits.splice(idx, 1);
+        }
+        previewSplatEdit = null;
+      }
+      brushPoints = [];
+    }
+
+    function addBrushCapsule(start, end, radius) {
+      if (!currentSplat) return;
+
+      // Initialize preview edit if needed
+      if (!previewSplatEdit) {
+        previewSplatEdit = new SplatEdit({
+          rgbaBlendMode: SplatEditRgbaBlendMode.SET_RGB,
+          sdfs: [],
+          softEdge: 0.2, // Softer edge for brush
+          name: 'Brush Selection'
+        });
+
+        if (!currentSplat.edits) currentSplat.edits = [];
+        currentSplat.edits.push(previewSplatEdit);
+      }
+
+      const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      if (length < 0.001) return;
+
+      direction.normalize();
+
+      // Align Y axis with direction
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+
+      // Transform to local space
+      const splatInverse = currentSplat.matrixWorld.clone().invert();
+      const localPos = center.clone().applyMatrix4(splatInverse);
+      const localRot = quaternion.clone().multiply(currentSplat.quaternion.clone().invert());
+
+      // Create Capsule SDF
+      const sdf = new SplatEditSdf({
+        type: SplatEditSdfType.CAPSULE,
+        opacity: 0.6, // Semi-transparent yellow
+        color: new THREE.Color(1.0, 1.0, 0.0), // Yellow
+        radius: radius,
+        displace: new THREE.Vector3(0, 0, 0)
+      });
+
+      // Set transform
+      sdf.position.copy(center); // Using world position as SplatEdit handles transform? 
+      // Wait, in updatePreviewSplatEdit I saw: 
+      // sdf.position.copy(position);
+      // And the comment: "For now, let's assume Splat is at origin/identity"
+      // If Splat is at origin, world == local.
+      // But if Splat is moved, we need to be careful.
+      // The SplatEdit system seems to expect world space transforms for the SDFs if they are children of the scene?
+      // No, SplatEditSdf is a child of SplatEdit? No, SplatEdit has a list of SDFs.
+      // SplatEditSdf extends Object3D.
+      // If they are not added to the scene graph, their matrixWorld is not auto-updated by Three.js renderer unless we do it.
+      // SplatEdit.ts calls `sdf.updateMatrixWorld()` manually.
+      // And it sets `sdf.scale` based on sizes.
+
+      sdf.position.copy(center);
+      sdf.quaternion.copy(quaternion);
+      sdf.scale.set(radius, length, radius); // y is length
+
+      previewSplatEdit.addSdf(sdf);
+    }
+
+    function updatePreviewSplatEdit(type, position, rotation, scale, radius) {
+      if (!currentSplat) return;
+
+      // Create edit if not exists
+      if (!previewSplatEdit) {
+        const sdf = new SplatEditSdf({
+          type: type === 'sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX,
+          opacity: 0.6,
+          color: new THREE.Color(1.0, 1.0, 0.0), // Yellow
+          radius: 0.0
+        });
+
+        previewSplatEdit = new SplatEdit({
+          rgbaBlendMode: SplatEditRgbaBlendMode.SET_RGB,
+          sdfs: [sdf],
+          softEdge: 0.1
+        });
+
+        if (!currentSplat.edits) currentSplat.edits = [];
+        currentSplat.edits.push(previewSplatEdit);
+      }
+
+      // Update SDF properties (assuming single SDF for sphere/box)
+      if (previewSplatEdit.sdfs.length === 0) {
+        const sdf = new SplatEditSdf({
+          type: type === 'sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX,
+          opacity: 0.6,
+          color: new THREE.Color(1.0, 1.0, 0.0), // Yellow
+          radius: 0.0
+        });
+        previewSplatEdit.addSdf(sdf);
+      }
+
+      const sdf = previewSplatEdit.sdfs[0];
+      sdf.type = type === 'sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX;
+      sdf.color.setHex(0xFFFF00); // Ensure yellow
+
+      sdf.position.copy(position);
+      sdf.rotation.copy(rotation);
+
+      if (type === 'sphere') {
+        sdf.radius = radius;
+        sdf.scale.setScalar(1);
+      } else {
+        sdf.scale.copy(scale);
+        sdf.radius = 0.1; // Rounding for box
+      }
+    }
+
+    function createSphere(center, radius) {
+      const geometry = new THREE.SphereGeometry(radius, 32, 32);
+      const mesh = new THREE.Mesh(geometry, collisionMaterial.clone());
+      mesh.position.copy(center);
+      return mesh;
+    }
+
+    function createBox(center, width, height, depth) {
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      const mesh = new THREE.Mesh(geometry, collisionMaterial.clone());
+      mesh.position.copy(center);
+      mesh.position.y += height / 2; // Align bottom to floor
+      return mesh;
+    }
+
+    function createBrushStroke(points, width) {
+      if (points.length < 2) return null;
+
+      // Create a tube geometry along the path
+      const curve = new THREE.CatmullRomCurve3(points);
+      const geometry = new THREE.TubeGeometry(curve, points.length * 2, width / 2, 8, false);
+      const mesh = new THREE.Mesh(geometry, collisionMaterial.clone());
+      return mesh;
+    }
+
+    function addMesh(mesh, type, data) {
+      const id = meshIdCounter++;
+      const meshData = {
+        id: id,
+        type: type,
+        mesh: mesh,
+        data: data
+      };
+
+      createdMeshes.push(meshData);
+
+      // Respect current visibility setting - REMOVED to keep meshes invisible by default
+      // if (showCreatedMeshesCheckbox) {
+      //   mesh.visible = showCreatedMeshesCheckbox.checked;
+      // }
+
+      scene.add(mesh);
+      updateMeshList();
+
+      console.log(`Created ${type} mesh #${id}`);
+    }
+
+    function deleteMesh(id) {
+      const index = createdMeshes.findIndex(m => m.id === id);
+      if (index !== -1) {
+        const meshData = createdMeshes[index];
+        scene.remove(meshData.mesh);
+
+        // Remove associated SplatEdit if exists
+        if (meshData.data.splatEdit && currentSplat && currentSplat.edits) {
+          const editIdx = currentSplat.edits.indexOf(meshData.data.splatEdit);
+          if (editIdx !== -1) {
+            currentSplat.edits.splice(editIdx, 1);
+          }
+        }
+
+        createdMeshes.splice(index, 1);
+        updateMeshList();
+      }
+    }
+
+    function clearAllMeshes() {
+      createdMeshes.forEach(m => {
+        scene.remove(m.mesh);
+        // Remove associated SplatEdit if exists
+        if (m.data.splatEdit && currentSplat && currentSplat.edits) {
+          const editIdx = currentSplat.edits.indexOf(m.data.splatEdit);
+          if (editIdx !== -1) {
+            currentSplat.edits.splice(editIdx, 1);
+          }
+        }
+      });
+      createdMeshes = [];
+      updateMeshList();
+    }
+
+    function updateMeshList() {
+      meshCount.textContent = createdMeshes.length;
+      meshItems.innerHTML = '';
+
+      createdMeshes.forEach(meshData => {
+        const item = document.createElement('div');
+        item.className = 'mesh-item';
+
+        const info = document.createElement('div');
+        info.className = 'mesh-item-info';
+
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'mesh-item-type';
+        typeSpan.textContent = meshData.type;
+
+        const pos = meshData.mesh.position;
+        const posText = document.createTextNode(` (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)})`);
+
+        info.appendChild(typeSpan);
+        info.appendChild(posText);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-mesh-btn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteMesh(meshData.id));
+
+        item.appendChild(info);
+        item.appendChild(deleteBtn);
+        meshItems.appendChild(item);
+      });
+    }
+
+    // Export/Import functionality
+    document.getElementById('export-meshes')?.addEventListener('click', () => {
+      const data = createdMeshes.map(m => ({
+        type: m.type,
+        position: { x: m.mesh.position.x, y: m.mesh.position.y, z: m.mesh.position.z },
+        rotation: { x: m.mesh.rotation.x, y: m.mesh.rotation.y, z: m.mesh.rotation.z },
+        data: m.data
+      }));
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'collision_meshes.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('import-meshes')?.addEventListener('click', () => {
+      document.getElementById('mesh-import-input').click();
+    });
+
+    document.getElementById('mesh-import-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          clearAllMeshes();
+
+          data.forEach(item => {
+            let mesh = null;
+            if (item.type === 'sphere') {
+              mesh = createSphere(
+                new THREE.Vector3(item.position.x, item.position.y, item.position.z),
+                item.data.radius
+              );
+            } else if (item.type === 'box') {
+              mesh = createBox(
+                new THREE.Vector3(item.position.x, item.position.y, item.position.z),
+                item.data.width,
+                item.data.height,
+                item.data.depth
+              );
+              mesh.rotation.set(item.rotation.x, item.rotation.y, item.rotation.z);
+            } else if (item.type === 'brush') {
+              const points = item.data.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+              mesh = createBrushStroke(points, item.data.width);
+            }
+
+            if (mesh) {
+              addMesh(mesh, item.type, item.data);
+            }
+          });
+        } catch (err) {
+          console.error('Failed to import meshes:', err);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('clear-meshes')?.addEventListener('click', () => {
+      if (confirm('Delete all created meshes?')) {
+        clearAllMeshes();
+      }
+    });
+
+    // Mouse interaction for tool usage
+    let isToolMouseDown = false;
+
+    renderer.domElement.addEventListener('mousedown', (event) => {
+      if (activeTool === 'none') return;
+
+      // Don't interfere with camera rotation
+      if (event.button !== 0) return;
+
+      isToolMouseDown = true;
+      isCreating = true;
+
+      const pos = getWorldPosition(event);
+      if (!pos) return;
+
+      creationStart = pos.clone();
+
+      if (activeTool === 'sphere') {
+        // Create preview sphere
+        previewMesh = createSphere(creationStart, 0.5);
+        previewMesh.material = previewMaterial.clone();
+        scene.add(previewMesh);
+      } else if (activeTool === 'box') {
+        // Create preview box
+        previewMesh = createBox(creationStart, 0.5, boxHeight, 0.5);
+        previewMesh.material = previewMaterial.clone();
+        scene.add(previewMesh);
+      } else if (activeTool === 'brush') {
+        brushPoints.push(pos.clone());
+      }
+    });
+
+    renderer.domElement.addEventListener('mousemove', (event) => {
+      if (!isToolMouseDown || !isCreating || activeTool === 'none') return;
+
+      const pos = getWorldPosition(event);
+      if (!pos) return;
+
+      if (activeTool === 'sphere' && previewMesh) {
+        const radius = Math.max(0.5, creationStart.distanceTo(pos));
+        scene.remove(previewMesh);
+        previewMesh = createSphere(creationStart, radius);
+        previewMesh.material = previewMaterial.clone();
+        scene.add(previewMesh);
+
+        updatePreviewSplatEdit('sphere', creationStart, new THREE.Euler(), new THREE.Vector3(1, 1, 1), radius);
+
+      } else if (activeTool === 'box' && previewMesh) {
+        const dx = Math.abs(pos.x - creationStart.x);
+        const dz = Math.abs(pos.z - creationStart.z);
+        const width = Math.max(0.5, dx * 2);
+        const depth = Math.max(0.5, dz * 2);
+
+        scene.remove(previewMesh);
+        const center = new THREE.Vector3(
+          (creationStart.x + pos.x) / 2,
+          creationStart.y,
+          (creationStart.z + pos.z) / 2
+        );
+        previewMesh = createBox(center, width, boxHeight, depth);
+        previewMesh.material = previewMaterial.clone();
+        scene.add(previewMesh);
+
+        updatePreviewSplatEdit('box', center, new THREE.Euler(), new THREE.Vector3(width / 2, boxHeight / 2, depth / 2), 0);
+
+      } else if (activeTool === 'brush') {
+        // Add point if far enough from last point
+        const lastPoint = brushPoints[brushPoints.length - 1];
+        // Smoother sampling: 0.05m instead of 0.1m
+        if (!lastPoint || pos.distanceTo(lastPoint) > 0.05) {
+          brushPoints.push(pos.clone());
+
+          // Update preview
+          if (previewMesh) scene.remove(previewMesh);
+          if (brushPoints.length >= 2) {
+            // Use CatmullRomCurve3 for smooth path
+            const curve = new THREE.CatmullRomCurve3(brushPoints);
+            // Higher tubular segments for smoothness
+            const geometry = new THREE.TubeGeometry(curve, brushPoints.length * 4, brushWidth / 2, 8, false);
+            previewMesh = new THREE.Mesh(geometry, previewMaterial.clone());
+            scene.add(previewMesh);
+
+            // Add capsule SDF for the new segment
+            if (lastPoint) {
+              addBrushCapsule(lastPoint, pos, brushWidth / 2);
+            }
+          }
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', (event) => {
+      if (!isToolMouseDown || !isCreating || activeTool === 'none') {
+        isToolMouseDown = false;
+        return;
+      }
+
+      isToolMouseDown = false;
+      isCreating = false;
+
+      const pos = getWorldPosition(event);
+      if (!pos || !creationStart) {
+        clearPreview();
+        return;
+      }
+
+      // Finalize creation
+      if (activeTool === 'sphere') {
+        const radius = Math.max(0.5, creationStart.distanceTo(pos));
+        const mesh = createSphere(creationStart, radius);
+        mesh.visible = false; // Invisible but exists for raycasting
+        mesh.name = 'Sphere Selection';
+        collisionObjects.push(mesh);
+
+        // Persist SplatEdit
+        const savedSplatEdit = previewSplatEdit;
+        previewSplatEdit = null;
+
+        addMesh(mesh, 'sphere', {
+          radius,
+          center: creationStart.clone(),
+          splatEdit: savedSplatEdit
+        });
+      } else if (activeTool === 'box') {
+        const dx = Math.abs(pos.x - creationStart.x);
+        const dz = Math.abs(pos.z - creationStart.z);
+        const width = Math.max(0.5, dx * 2);
+        const depth = Math.max(0.5, dz * 2);
+        const center = new THREE.Vector3(
+          (creationStart.x + pos.x) / 2,
+          creationStart.y,
+          (creationStart.z + pos.z) / 2
+        );
+
+        const mesh = createBox(center, width, boxHeight, depth);
+        mesh.visible = false; // Invisible
+        mesh.name = 'Box Selection';
+        collisionObjects.push(mesh);
+
+        // Persist SplatEdit
+        const savedSplatEdit = previewSplatEdit;
+        previewSplatEdit = null;
+
+        addMesh(mesh, 'box', {
+          width,
+          height: boxHeight,
+          depth,
+          center: center.clone(),
+          splatEdit: savedSplatEdit
+        });
+      } else if (activeTool === 'brush' && brushPoints.length >= 2) {
+        // Create actual mesh for raycasting
+        const mesh = createBrushStroke(brushPoints, brushWidth);
+        mesh.visible = false; // Invisible
+        mesh.name = 'Brush Selection';
+        collisionObjects.push(mesh);
+
+        if (mesh) {
+          // Persist the SplatEdit by detaching it from previewSplatEdit variable
+          // so clearPreview doesn't remove it from currentSplat.edits
+          const savedSplatEdit = previewSplatEdit;
+          previewSplatEdit = null; // Detach
+
+          addMesh(mesh, 'brush', {
+            points: brushPoints.map(p => p.clone()),
+            width: brushWidth,
+            splatEdit: savedSplatEdit // Store reference to remove later
+          });
+        }
+      }
+
+      clearPreview();
+    });
+
+    // Escape key to cancel
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        clearPreview();
+        isCreating = false;
+        isToolMouseDown = false;
+      }
+    });
+
+    // ===== COLLISION DETECTION WITH MESHES =====
+    const collisionObjects = []; // Array to hold invisible meshes for raycasting
+
+    function getGroundHeight(x, z) {
+      // 1. Check grid height first
+      let groundY = floorY;
+      const cell = getGridCell(x, z);
+      if (cell) {
+        groundY = cell.y;
+      }
+
+      // 2. Raycast against collision meshes
+      if (collisionObjects.length > 0) {
+        const rayOrigin = new THREE.Vector3(x, 100, z);
+        const rayDir = new THREE.Vector3(0, -1, 0);
+        raycaster.set(rayOrigin, rayDir);
+
+        const intersects = raycaster.intersectObjects(collisionObjects, false);
+        if (intersects.length > 0) {
+          // Find the highest intersection point
+          // intersects are sorted by distance, so the first one is the highest (closest to 100)
+          const meshY = intersects[0].point.y;
+          if (meshY > groundY) {
+            groundY = meshY;
+          }
+        }
+      }
+
+      return groundY;
+    }
+
+    function checkMeshCollision(x, y, z) {
+      // This function is now less critical for movement blocking if we use slope check
+      // But we can still use it for "ceiling" checks or explicit walls if needed.
+      // For now, let's rely on getGroundHeight for floor/stairs.
+      // We might still want to block if we hit the SIDE of a mesh?
+      // Raycast down handles "on top". 
+      // To handle "hitting a wall", we need to check if the step up is too high.
+      return false;
+    }
+
+    renderer.setAnimationLoop(function animate(time) {
+      try {
+        const dt = (time - lastTime) / 1000;
+        lastTime = time;
+
+        updatePlayer(dt);
+        updateDrone(dt);
+        updateCamera();
+        // updateCoordInfo(); // Removed
+
+        renderer.render(scene, camera);
+      } catch (err) {
+        const debugDiv = document.getElementById('movement-debug');
+        if (debugDiv) {
+          debugDiv.innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
+          debugDiv.style.backgroundColor = "rgba(0,0,0,0.8)";
+        }
+        console.error(err);
+        renderer.setAnimationLoop(null); // Stop loop
+      }
+    });
+    // Global Error Handler for Init
+    window.onerror = function (message, source, lineno, colno, error) {
+      const debugDiv = document.getElementById('movement-debug');
+      if (debugDiv) {
+        debugDiv.innerHTML = `<span style="color:red; font-weight:bold;">CRITICAL ERROR: ${message} at line ${lineno}</span>`;
+        debugDiv.style.display = 'block';
+      } else {
+        console.error(`CRITICAL ERROR: ${message} at line ${lineno}`);
+      }
+    };
+  </script>
+  </body>
+
+  </html>
