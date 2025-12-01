@@ -24,7 +24,10 @@ A fully programmatic 3D robot built using Three.js primitives, designed for inte
 ### 🎨 3D Gaussian Splatting
 - **Rendering**: High-fidelity real-time rendering of captured scenes.
 - **Data Source**: The point cloud data (`work/export_last.ply`) was generated using the **NVIDIA 3DGUT** (3D Gaussian Unscented Transform) tool. You can find the tool and more details at [3DGRUT GitHub](https://github.com/nv-tlabs/3dgrut). This advanced tool allows for high-quality scene reconstruction which serves as the base for this project.
-
+- 
+### 🎨 3D Gaussian Splatting
+- **Demo**: https://vimeo.com/1142107525?share=copy&fl=sv&fe=ci#t=0
+  
 ## 📦 Installation & Requirements
 
 ### Prerequisites
