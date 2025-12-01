@@ -309,6 +309,60 @@
       line-height: 1.5;
       color: #c0c0ff;
     }
+
+    /* UI Toggle Button */
+    #ui-toggle-btn {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #f5f5f5;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #ui-toggle-btn:hover {
+      background: rgba(30, 30, 50, 0.9);
+      border-color: #7f5cff;
+      box-shadow: 0 4px 16px rgba(127, 92, 255, 0.4);
+    }
+
+    #ui-toggle-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Panel Transitions */
+    #control-panel,
+    #mesh-tools-panel {
+      transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.4s ease;
+    }
+
+    /* Hidden States */
+    body.ui-hidden #control-panel {
+      transform: translateX(-150%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.ui-hidden #mesh-tools-panel {
+      transform: translateX(150%);
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
   <script type="importmap">
   {
@@ -319,6 +373,13 @@
   }
 </script>
 
+  <button id="ui-toggle-btn">
+    <svg viewBox="0 0 24 24">
+      <path
+        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+    </svg>
+    <span>Hide UI</span>
+  </button>
   <div id="control-panel">
     <h2>Import my splat</h2>
     <label for="splat-url-input">Splat / SPZ URL</label>
@@ -438,18 +499,25 @@
       <h3>Created Meshes (<span id="mesh-count">0</span>)</h3>
       <div id="mesh-items"></div>
       <div class="mesh-actions">
-        <button class="mesh-action-btn" id="export-meshes">💾 Export</button>
-        <button class="mesh-action-btn" id="import-meshes">📂 Import</button>
+        <button class="mesh-action-btn" id="export-meshes">💾 Export Meshes</button>
+        <button class="mesh-action-btn" id="export-scene">🌍 Export Project (JSON)</button>
+        <button class="mesh-action-btn" id="export-ply-package">📦 Export PLY Package</button>
+        <button class="mesh-action-btn" id="import-meshes">📂 Import Meshes</button>
+        <button class="mesh-action-btn" id="import-scene">🌐 Import Scene</button>
         <button class="mesh-action-btn" id="clear-meshes">🗑️ Clear All</button>
       </div>
     </div>
   </div>
 
   <input type="file" id="mesh-import-input" accept=".json" style="display: none;">
+  <input type="file" id="scene-import-input" accept=".json" style="display: none;">
 
   <script type="module">
     import * as THREE from "three";
     import { SplatMesh, SplatEdit, SplatEditSdf, SplatEditSdfType, SplatEditRgbaBlendMode } from "@sparkjsdev/spark";
+    import { ConvexGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/geometries/ConvexGeometry.js';
+    import { PLYExporter } from 'https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/exporters/PLYExporter.js';
+    import JSZip from 'https://esm.run/jszip';
 
     const scene = new THREE.Scene();
 
@@ -1715,8 +1783,377 @@
       return mesh;
     }
 
+    // ===== POINT-TO-MESH COLLISION SYSTEM =====
+
+    // Helper: Calculate distance from point to line segment
+    function distanceToLineSegment(point, segmentStart, segmentEnd) {
+      const line = new THREE.Vector3().subVectors(segmentEnd, segmentStart);
+      const lineLength = line.length();
+
+      if (lineLength === 0) {
+        return point.distanceTo(segmentStart);
+      }
+
+      const t = Math.max(0, Math.min(1,
+        new THREE.Vector3().subVectors(point, segmentStart).dot(line) / (lineLength * lineLength)
+      ));
+
+      const projection = new THREE.Vector3().addVectors(
+        segmentStart,
+        line.multiplyScalar(t)
+      );
+
+      return point.distanceTo(projection);
+    }
+
+    // Helper: Calculate bounding box of points
+    function calculateBounds(points) {
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+
+      for (const p of points) {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+        if (p.z < minZ) minZ = p.z;
+        if (p.z > maxZ) maxZ = p.z;
+      }
+
+      return { minX, maxX, minY, maxY, minZ, maxZ };
+    }
+
+    // Extract splat points that fall within brush selection area
+    function getPointsInBrushArea(splatMesh, brushPoints, brushWidth) {
+      if (!splatMesh) {
+        console.warn('No splat mesh provided');
+        return [];
+      }
+
+      // Try to access geometry data from SplatMesh
+      let positions = null;
+
+      // Debug: Log structure to understand how to access points
+      console.log('SplatMesh structure:', {
+        hasGeometry: !!splatMesh.geometry,
+        hasAttributes: splatMesh.geometry?.attributes ? Object.keys(splatMesh.geometry.attributes) : 'none',
+        geometryType: splatMesh.geometry?.type,
+        splatMeshType: splatMesh.constructor?.name
+      });
+
+      // Try different ways to access positions
+      if (splatMesh.geometry?.attributes?.position) {
+        positions = splatMesh.geometry.attributes.position;
+        console.log('Found positions via geometry.attributes.position');
+      } else if (splatMesh.geometry?.getAttribute) {
+        try {
+          positions = splatMesh.geometry.getAttribute('position');
+          console.log('Found positions via getAttribute');
+        } catch (e) {
+          console.warn('getAttribute failed:', e.message);
+        }
+      }
+
+      if (!positions) {
+        console.error('Could not access splat positions. Available properties:', Object.keys(splatMesh));
+        return [];
+      }
+
+      const selectedPoints = [];
+      const radius = brushWidth / 2;
+
+      console.log(`Checking ${positions.count} points against brush area (radius: ${radius})`);
+
+      // For each splat point
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+        const point = new THREE.Vector3(x, y, z);
+
+        // Check if point is near any segment of the brush path
+        for (let j = 0; j < brushPoints.length - 1; j++) {
+          const segmentStart = brushPoints[j];
+          const segmentEnd = brushPoints[j + 1];
+
+          // Calculate distance from point to line segment
+          const dist = distanceToLineSegment(point, segmentStart, segmentEnd);
+
+          if (dist <= radius) {
+            selectedPoints.push(point.clone());
+            break; // Don't add the same point multiple times
+          }
+        }
+      }
+      console.log(`Selected ${selectedPoints.length} points from splat`);
+      return selectedPoints;
+    }
+
+    // Extract splat points that fall within a spherical region
+    function getPointsInSphere(splatMesh, center, radius) {
+      if (!splatMesh) {
+        console.warn('No splat mesh provided');
+        return [];
+      }
+
+      let positions = null;
+
+      // Try to access positions
+      if (splatMesh.geometry?.attributes?.position) {
+        positions = splatMesh.geometry.attributes.position;
+      } else if (splatMesh.geometry?.getAttribute) {
+        try {
+          positions = splatMesh.geometry.getAttribute('position');
+        } catch (e) {
+          console.warn('getAttribute failed:', e.message);
+        }
+      }
+
+      if (!positions) {
+        console.error('Could not access splat positions');
+        return [];
+      }
+
+      const selectedPoints = [];
+      console.log(`Checking ${positions.count} points against sphere (center: ${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)}, radius: ${radius.toFixed(2)})`);
+
+      // For each splat point, check if it's within the sphere
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+        const point = new THREE.Vector3(x, y, z);
+
+        const distance = point.distanceTo(center);
+        if (distance <= radius) {
+          selectedPoints.push(point.clone());
+        }
+      }
+
+      console.log(`Selected ${selectedPoints.length} points from splat in sphere`);
+      return selectedPoints;
+    }
+
+    // Extract splat points that fall within a box region
+    function getPointsInBox(splatMesh, center, width, height, depth) {
+      if (!splatMesh) {
+        console.warn('No splat mesh provided');
+        return [];
+      }
+
+      let positions = null;
+
+      // Try to access positions
+      if (splatMesh.geometry?.attributes?.position) {
+        positions = splatMesh.geometry.attributes.position;
+      } else if (splatMesh.geometry?.getAttribute) {
+        try {
+          positions = splatMesh.geometry.getAttribute('position');
+        } catch (e) {
+          console.warn('getAttribute failed:', e.message);
+        }
+      }
+
+      if (!positions) {
+        console.error('Could not access splat positions');
+        return [];
+      }
+
+      const selectedPoints = [];
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const halfDepth = depth / 2;
+
+      console.log(`Checking ${positions.count} points against box (center: ${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)}, size: ${width.toFixed(2)}x${height.toFixed(2)}x${depth.toFixed(2)})`);
+
+      // For each splat point, check if it's within the box bounds
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+        const point = new THREE.Vector3(x, y, z);
+
+        // Check if point is within box bounds
+        const dx = Math.abs(point.x - center.x);
+        const dy = Math.abs(point.y - center.y);
+        const dz = Math.abs(point.z - center.z);
+
+        if (dx <= halfWidth && dy <= halfHeight && dz <= halfDepth) {
+          selectedPoints.push(point.clone());
+        }
+      }
+
+      console.log(`Selected ${selectedPoints.length} points from splat in box`);
+      return selectedPoints;
+    }
+
+    // Create convex hull collision mesh from points
+    function createConvexHullFromPoints(points) {
+      if (points.length === 0) {
+        console.warn('No points to create convex hull from');
+        return null;
+      }
+
+      console.log(`Creating convex hull collision mesh from ${points.length} points`);
+
+      // Create convex hull using ConvexGeometry
+      try {
+        const convexGeometry = new ConvexGeometry(points);
+
+        console.log(`Created convex hull collision mesh with ${convexGeometry.attributes.position.count} vertices`);
+
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xff4444,
+          transparent: true,
+          opacity: 0.0,
+          side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(convexGeometry, material);
+        return mesh;
+      } catch (error) {
+        console.error('Error creating convex hull geometry:', error);
+        console.error('Falling back to simple bounding box');
+
+        // Fallback: create a simple bounding box
+        const bounds = calculateBounds(points);
+        const width = bounds.maxX - bounds.minX;
+        const height = bounds.maxY - bounds.minY;
+        const depth = bounds.maxZ - bounds.minZ;
+
+        const boxGeometry = new THREE.BoxGeometry(width, height, depth);
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xff4444,
+          transparent: true,
+          opacity: 0.0,
+          side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(boxGeometry, material);
+        mesh.position.set(
+          (bounds.minX + bounds.maxX) / 2,
+          (bounds.minY + bounds.maxY) / 2,
+          (bounds.minZ + bounds.maxZ) / 2
+        );
+
+        return mesh;
+      }
+    }
+
+    // Create collision mesh directly from brush points using convex hull
+    function createCollisionMeshFromBrushPoints(points, brushWidth) {
+      if (points.length === 0) {
+        console.warn('No points to create mesh from');
+        return null;
+      }
+
+      console.log(`Creating convex hull collision mesh from ${points.length} brush points (width: ${brushWidth}m)`);
+
+      // Create a set of vertices around the brush path
+      const vertices = [];
+      const radius = brushWidth / 2;
+
+      // For each point, create a ring of vertices around it
+      const radialSegments = 8; // octagon around each point
+
+      for (let i = 0; i < points.length; i++) {
+        const point = points[i];
+
+        // Get direction for perpendicular orientation
+        let forward, right, up;
+
+        if (i < points.length - 1) {
+          forward = new THREE.Vector3().subVectors(points[i + 1], point).normalize();
+        } else if (i > 0) {
+          forward = new THREE.Vector3().subVectors(point, points[i - 1]).normalize();
+        } else {
+          forward = new THREE.Vector3(0, 1, 0);
+        }
+
+        // Create perpendicular vectors
+        if (Math.abs(forward.y) < 0.99) {
+          up = new THREE.Vector3(0, 1, 0);
+        } else {
+          up = new THREE.Vector3(1, 0, 0);
+        }
+        right = new THREE.Vector3().crossVectors(forward, up).normalize();
+        up = new THREE.Vector3().crossVectors(right, forward).normalize();
+
+        // Create ring of vertices around this point
+        for (let j = 0; j < radialSegments; j++) {
+          const angle = (j / radialSegments) * Math.PI * 2;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+
+          const vertex = new THREE.Vector3(
+            point.x + (right.x * cos + up.x * sin) * radius,
+            point.y + (right.y * cos + up.y * sin) * radius,
+            point.z + (right.z * cos + up.z * sin) * radius
+          );
+
+          vertices.push(vertex);
+        }
+      }
+
+      // Also add the center points for better hull shape
+      for (const point of points) {
+        vertices.push(point.clone());
+      }
+
+      console.log(`Generated ${vertices.length} vertices for convex hull`);
+
+      // Create convex hull using ConvexGeometry
+      try {
+        const convexGeometry = new ConvexGeometry(vertices);
+
+        console.log(`Created convex hull collision mesh with ${convexGeometry.attributes.position.count} vertices`);
+
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xff4444,
+          transparent: true,
+          opacity: 0.0,
+          side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(convexGeometry, material);
+        return mesh;
+      } catch (error) {
+        console.error('Error creating convex hull geometry:', error);
+        console.error('Falling back to simple bounding box');
+
+        // Fallback: create a simple bounding box
+        const bounds = calculateBounds(points);
+        const width = bounds.maxX - bounds.minX + brushWidth;
+        const height = bounds.maxY - bounds.minY + brushWidth;
+        const depth = bounds.maxZ - bounds.minZ + brushWidth;
+
+        const boxGeometry = new THREE.BoxGeometry(width, height, depth);
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xff4444,
+          transparent: true,
+          opacity: 0.0,
+          side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(boxGeometry, material);
+        mesh.position.set(
+          (bounds.minX + bounds.maxX) / 2,
+          (bounds.minY + bounds.maxY) / 2,
+          (bounds.minZ + bounds.maxZ) / 2
+        );
+
+        return mesh;
+      }
+    }
+
+    // REMOVED: evaluateSDF - no longer needed for brush collision
+
+    // REMOVED: samplePointsFromSDF - no longer needed with direct tube collision
+
+    // REMOVED: createMeshFromSplatEditSDF - replaced with direct createCollisionMeshFromBrushPoints
+
     function createBrushStroke(points, width) {
-      if (points.length < 2) return null;
 
       // Create a tube geometry along the path
       const curve = new THREE.CatmullRomCurve3(points);
@@ -1815,12 +2252,31 @@
 
     // Export/Import functionality
     document.getElementById('export-meshes')?.addEventListener('click', () => {
-      const data = createdMeshes.map(m => ({
-        type: m.type,
-        position: { x: m.mesh.position.x, y: m.mesh.position.y, z: m.mesh.position.z },
-        rotation: { x: m.mesh.rotation.x, y: m.mesh.rotation.y, z: m.mesh.rotation.z },
-        data: m.data
-      }));
+      const data = createdMeshes.map(m => {
+        // Create a serializable data object
+        const serializedData = { ...m.data };
+
+        // Convert Vector3 objects to plain objects for serialization
+        if (serializedData.center && serializedData.center.isVector3) {
+          serializedData.center = { x: serializedData.center.x, y: serializedData.center.y, z: serializedData.center.z };
+        }
+
+        if (serializedData.points && Array.isArray(serializedData.points)) {
+          serializedData.points = serializedData.points.map(p =>
+            p.isVector3 ? { x: p.x, y: p.y, z: p.z } : p
+          );
+        }
+
+        // Remove non-serializable objects
+        delete serializedData.splatEdit;
+
+        return {
+          type: m.type,
+          position: { x: m.mesh.position.x, y: m.mesh.position.y, z: m.mesh.position.z },
+          rotation: { x: m.mesh.rotation.x, y: m.mesh.rotation.y, z: m.mesh.rotation.z },
+          data: serializedData
+        };
+      });
 
       const json = JSON.stringify(data, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -1883,11 +2339,619 @@
       }
     });
 
+    // Export complete scene (PLY + offsets + collision grid + meshes)
+    document.getElementById('export-scene')?.addEventListener('click', () => {
+      const sceneData = {
+        version: '1.0',
+        ply: {
+          url: currentSplat?.url || null,
+          fileName: currentSplat?.fileName || null,
+          offsets: {
+            x: parseFloat(document.getElementById('offset-x')?.value || 0),
+            y: parseFloat(document.getElementById('offset-y')?.value || 0),
+            z: parseFloat(document.getElementById('offset-z')?.value || 0)
+          }
+        },
+        collisionGrid: {
+          metadata: gridMetadata,
+          map: collisionMap
+        },
+        meshes: createdMeshes.map(m => {
+          // Create a serializable data object
+          const serializedData = { ...m.data };
+
+          // Convert Vector3 objects to plain objects for serialization
+          if (serializedData.center && serializedData.center.isVector3) {
+            serializedData.center = { x: serializedData.center.x, y: serializedData.center.y, z: serializedData.center.z };
+          }
+
+          if (serializedData.points && Array.isArray(serializedData.points)) {
+            serializedData.points = serializedData.points.map(p =>
+              p.isVector3 ? { x: p.x, y: p.y, z: p.z } : p
+            );
+          }
+
+          // Remove non-serializable objects
+          delete serializedData.splatEdit;
+
+          return {
+            type: m.type,
+            position: { x: m.mesh.position.x, y: m.mesh.position.y, z: m.mesh.position.z },
+            rotation: { x: m.mesh.rotation.x, y: m.mesh.rotation.y, z: m.mesh.rotation.z },
+            data: serializedData
+          };
+        })
+      };
+
+      const json = JSON.stringify(sceneData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'scene_complete.json';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      console.log('Exported complete scene:', sceneData);
+    });
+
+    // Import meshes only
+    document.getElementById('import-meshes')?.addEventListener('click', () => {
+      document.getElementById('mesh-import-input').click();
+    });
+
+    // Import complete scene
+    document.getElementById('import-scene')?.addEventListener('click', () => {
+      document.getElementById('scene-import-input').click();
+    });
+
+    document.getElementById('scene-import-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const sceneData = JSON.parse(event.target.result);
+
+          console.log('Importing complete scene:', sceneData);
+
+          // Import PLY and offsets
+          if (sceneData.ply && sceneData.ply.url) {
+            loadSplat(sceneData.ply.url, sceneData.ply.fileName);
+
+            // Set offsets
+            if (sceneData.ply.offsets) {
+              const offsetXInput = document.getElementById('offset-x');
+              const offsetYInput = document.getElementById('offset-y');
+              const offsetZInput = document.getElementById('offset-z');
+              const offsetXValue = document.getElementById('offset-x-value');
+              const offsetYValue = document.getElementById('offset-y-value');
+              const offsetZValue = document.getElementById('offset-z-value');
+
+              if (offsetXInput) {
+                offsetXInput.value = sceneData.ply.offsets.x;
+                offsetXValue.textContent = sceneData.ply.offsets.x;
+              }
+              if (offsetYInput) {
+                offsetYInput.value = sceneData.ply.offsets.y;
+                offsetYValue.textContent = sceneData.ply.offsets.y;
+              }
+              if (offsetZInput) {
+                offsetZInput.value = sceneData.ply.offsets.z;
+                offsetZValue.textContent = sceneData.ply.offsets.z;
+              }
+
+              // Apply offsets to the loaded splat
+              setTimeout(() => {
+                if (currentSplat) {
+                  currentSplat.position.set(
+                    sceneData.ply.offsets.x,
+                    sceneData.ply.offsets.y,
+                    sceneData.ply.offsets.z
+                  );
+                }
+              }, 500);
+            }
+          }
+
+          // Import collision grid
+          if (sceneData.collisionGrid) {
+            if (sceneData.collisionGrid.metadata) {
+              gridMetadata = sceneData.collisionGrid.metadata;
+              floorY = gridMetadata.min_y || 0;
+            }
+            if (sceneData.collisionGrid.map) {
+              collisionMap = sceneData.collisionGrid.map;
+            }
+
+            // Recreate collision grid visualization if it was shown
+            if (collisionGridGroup) {
+              scene.remove(collisionGridGroup);
+              collisionGridGroup = createCollisionGrid();
+              if (collisionGridGroup) {
+                scene.add(collisionGridGroup);
+                collisionGridGroup.visible = document.getElementById('show-collision')?.checked || false;
+              }
+            }
+          }
+
+          // Import meshes
+          if (sceneData.meshes) {
+            clearAllMeshes();
+
+            sceneData.meshes.forEach(item => {
+              let mesh = null;
+              if (item.type === 'sphere') {
+                mesh = createSphere(
+                  new THREE.Vector3(item.position.x, item.position.y, item.position.z),
+                  item.data.radius
+                );
+              } else if (item.type === 'box') {
+                mesh = createBox(
+                  new THREE.Vector3(item.position.x, item.position.y, item.position.z),
+                  item.data.width,
+                  item.data.height,
+                  item.data.depth
+                );
+                mesh.rotation.set(item.rotation.x, item.rotation.y, item.rotation.z);
+              } else if (item.type === 'brush') {
+                const points = item.data.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+                mesh = createBrushStroke(points, item.data.width);
+              }
+
+              if (mesh) {
+                addMesh(mesh, item.type, item.data);
+              }
+            });
+          }
+
+          console.log('Scene import complete');
+        } catch (err) {
+          console.error('Failed to import scene:', err);
+          alert('Failed to import scene: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // ===== COMPLETE PLY EXPORT =====
+
+    async function exportSplatToPLY(splatMesh) {
+      if (!splatMesh) return null;
+
+      console.log('Generating Splat PLY...');
+
+      // Count splats
+      let splatCount = 0;
+      splatMesh.forEachSplat(() => { splatCount++; });
+
+      console.log(`Found ${splatCount} splats`);
+
+      // Create header
+      const header =
+        `ply
+format binary_little_endian 1.0
+element vertex ${splatCount}
+property float x
+property float y
+property float z
+property float nx
+property float ny
+property float nz
+property float f_dc_0
+property float f_dc_1
+property float f_dc_2
+property float opacity
+property float scale_0
+property float scale_1
+property float scale_2
+property float rot_0
+property float rot_1
+property float rot_2
+property float rot_3
+end_header
+`;
+
+      const headerEncoder = new TextEncoder();
+      const headerBytes = headerEncoder.encode(header);
+
+      // Calculate buffer size
+      // 3 pos + 3 norm + 3 color + 1 opacity + 3 scale + 4 rot = 17 floats * 4 bytes = 68 bytes per splat
+      const rowSize = 68;
+      const bufferSize = headerBytes.length + splatCount * rowSize;
+      const buffer = new ArrayBuffer(bufferSize);
+      const view = new DataView(buffer);
+
+      // Write header
+      const uint8View = new Uint8Array(buffer);
+      uint8View.set(headerBytes, 0);
+
+      let offset = headerBytes.length;
+
+      // Get current world transform of the splat (offsets)
+      const positionOffset = splatMesh.position;
+      const rotationOffset = splatMesh.quaternion;
+      const scaleOffset = splatMesh.scale;
+
+      // Iterate and write data
+      splatMesh.forEachSplat((index, center, scales, quaternion, opacity, color) => {
+        // Apply world transform to position
+        // Note: We are only applying translation (offsets) as per user request "with its offsets value"
+        // If the user rotated/scaled the splat object, we should apply that too.
+        // The splatMesh.matrixWorld contains the full transform.
+
+        const worldPos = center.clone().applyMatrix4(splatMesh.matrixWorld);
+
+        // Write Position (x, y, z)
+        // Converting Three.js (Y-up) to standard 3DGS (often Y-down).
+        // Flipping Y and Z is a common conversion.
+        view.setFloat32(offset + 0, worldPos.x, true);
+        view.setFloat32(offset + 4, -worldPos.y, true);
+        view.setFloat32(offset + 8, -worldPos.z, true);
+
+        // Write Normals (0, 0, 0) - placeholders
+        view.setFloat32(offset + 12, 0, true);
+        view.setFloat32(offset + 16, 0, true);
+        view.setFloat32(offset + 20, 0, true);
+
+        // Write Color (f_dc_0, 1, 2)
+        // SH DC component is related to RGB. 
+        // Standard formula: RGB = 0.5 + C0 * SH
+        // So SH = (RGB - 0.5) / C0
+        // C0 = 0.28209479177387814
+        const C0 = 0.28209479177387814;
+        view.setFloat32(offset + 24, (color.r - 0.5) / C0, true);
+        view.setFloat32(offset + 28, (color.g - 0.5) / C0, true);
+        view.setFloat32(offset + 32, (color.b - 0.5) / C0, true);
+
+        // Write Opacity (logit? or raw?)
+        // Standard PLY usually stores opacity as logit (inverse sigmoid) or raw depending on loader.
+        // 3DGS usually stores opacity passed through sigmoid in renderer, but in PLY it's raw.
+        // However, `opacity` passed here is likely already 0-1.
+        // If we write 0-1, loaders might expect logit.
+        // Let's assume standard 3DGS loaders expect raw values that they pass through sigmoid.
+        // Inverse sigmoid: log(p / (1 - p))
+        // But wait, `SplatMesh` might give us the raw value or the sigmoid value.
+        // Usually `opacity` in callback is 0-1.
+        // If I write it as is, standard loaders might apply sigmoid again and it will be wrong?
+        // Actually, standard 3DGS PLY stores opacity as a float.
+        // Let's try writing the inverse sigmoid.
+        const op = Math.max(0.0001, Math.min(0.9999, opacity));
+        const logitOpacity = Math.log(op / (1 - op));
+        view.setFloat32(offset + 36, logitOpacity, true);
+
+        // Write Scale (log scale)
+        // `scales` is likely linear. PLY expects log scale.
+        // Apply global scale offset
+        view.setFloat32(offset + 40, Math.log(scales.x * scaleOffset.x), true);
+        view.setFloat32(offset + 44, Math.log(scales.y * scaleOffset.y), true);
+        view.setFloat32(offset + 48, Math.log(scales.z * scaleOffset.z), true);
+
+        // Write Rotation (quaternion)
+        // Apply object rotation to splat rotation
+        const worldRot = quaternion.clone().premultiply(rotationOffset);
+
+        // Flip Y and Z to match position flip (if coordinate system change is X, -Y, -Z)
+        // Quaternion (x, y, z, w) -> (x, -y, -z, w)
+        view.setFloat32(offset + 52, worldRot.w, true);
+        view.setFloat32(offset + 56, worldRot.x, true);
+        view.setFloat32(offset + 60, -worldRot.y, true);
+        view.setFloat32(offset + 64, -worldRot.z, true);
+
+        offset += rowSize;
+      });
+
+      return buffer;
+    }
+
+    function exportCollisionMeshesToPLY() {
+      if (createdMeshes.length === 0) return null;
+
+      console.log('Generating Collision Mesh PLY...');
+
+      try {
+        const exporter = new PLYExporter();
+        const group = new THREE.Group();
+
+        createdMeshes.forEach(m => {
+          if (m.mesh) {
+            const clone = m.mesh.clone();
+            // Ensure world transform is baked or preserved
+            group.add(clone);
+          }
+        });
+
+        return new Promise((resolve, reject) => {
+          try {
+            exporter.parse(group, (result) => {
+              resolve(result);
+            }, { binary: true });
+          } catch (err) {
+            reject(err);
+          }
+        });
+      } catch (err) {
+        console.error("Error preparing collision meshes for export:", err);
+        return null;
+      }
+    }
+
+    async function exportSinglePLY(splatMesh, meshes) {
+      console.log('Generating Single PLY...');
+
+      // 1. Count Splats
+      let splatCount = 0;
+      if (splatMesh) {
+        splatMesh.forEachSplat(() => { splatCount++; });
+      }
+
+      // 2. Count Mesh Vertices and Faces
+      let meshVertexCount = 0;
+      let meshFaceCount = 0;
+      const meshData = []; // Store processed mesh data to avoid re-processing
+
+      meshes.forEach((m, index) => {
+        console.log(`Processing mesh ${index}: type=${m.type}, id=${m.id}`);
+        if (m.mesh && m.mesh.geometry) {
+          const geo = m.mesh.geometry;
+          const posAttr = geo.getAttribute('position');
+          if (posAttr) {
+            const vCount = posAttr.count;
+            let fCount = 0;
+            if (geo.index) {
+              fCount = geo.index.count / 3;
+              console.log(`  Indexed geometry: vCount=${vCount}, fCount=${fCount}`);
+            } else {
+              fCount = vCount / 3;
+              console.log(`  Non-indexed geometry: vCount=${vCount}, fCount=${fCount}`);
+            }
+
+            meshVertexCount += vCount;
+            meshFaceCount += fCount;
+
+            meshData.push({
+              mesh: m.mesh,
+              vCount,
+              fCount,
+              indexed: !!geo.index
+            });
+          } else {
+            console.warn(`  Mesh ${index} has no position attribute!`);
+          }
+        } else {
+          console.warn(`  Mesh ${index} has no mesh or geometry!`);
+        }
+      });
+
+      const totalVertexCount = splatCount + meshVertexCount;
+      console.log(`Splats: ${splatCount}, Mesh Vertices: ${meshVertexCount}, Mesh Faces: ${meshFaceCount}`);
+
+      // 3. Create Header
+      const header =
+        `ply
+format binary_little_endian 1.0
+element vertex ${totalVertexCount}
+property float x
+property float y
+property float z
+property float nx
+property float ny
+property float nz
+property float f_dc_0
+property float f_dc_1
+property float f_dc_2
+property float opacity
+property float scale_0
+property float scale_1
+property float scale_2
+property float rot_0
+property float rot_1
+property float rot_2
+property float rot_3
+element face ${meshFaceCount}
+property list uchar int vertex_indices
+end_header
+`;
+
+      const headerEncoder = new TextEncoder();
+      const headerBytes = headerEncoder.encode(header);
+
+      // 4. Calculate Buffer Size
+      const vertexRowSize = 68;
+      const faceRowSize = 13;
+
+      const bufferSize = headerBytes.length + (totalVertexCount * vertexRowSize) + (meshFaceCount * faceRowSize);
+      const buffer = new ArrayBuffer(bufferSize);
+      const view = new DataView(buffer);
+
+      // 5. Write Header
+      const uint8View = new Uint8Array(buffer);
+      uint8View.set(headerBytes, 0);
+
+      let offset = headerBytes.length;
+
+      // 6. Write Splats
+      if (splatMesh) {
+        const positionOffset = splatMesh.position;
+        const rotationOffset = splatMesh.quaternion;
+        const scaleOffset = splatMesh.scale;
+
+        splatMesh.forEachSplat((index, center, scales, quaternion, opacity, color) => {
+          const worldPos = center.clone().applyMatrix4(splatMesh.matrixWorld);
+
+          // Position (Flip Y/Z)
+          view.setFloat32(offset + 0, worldPos.x, true);
+          view.setFloat32(offset + 4, -worldPos.y, true);
+          view.setFloat32(offset + 8, -worldPos.z, true);
+
+          // Normals (0)
+          view.setFloat32(offset + 12, 0, true);
+          view.setFloat32(offset + 16, 0, true);
+          view.setFloat32(offset + 20, 0, true);
+
+          // Color (SH DC)
+          const C0 = 0.28209479177387814;
+          view.setFloat32(offset + 24, (color.r - 0.5) / C0, true);
+          view.setFloat32(offset + 28, (color.g - 0.5) / C0, true);
+          view.setFloat32(offset + 32, (color.b - 0.5) / C0, true);
+
+          // Opacity (logit)
+          const op = Math.max(0.0001, Math.min(0.9999, opacity));
+          const logitOpacity = Math.log(op / (1 - op));
+          view.setFloat32(offset + 36, logitOpacity, true);
+
+          // Scale (log, with global scale)
+          view.setFloat32(offset + 40, Math.log(scales.x * scaleOffset.x), true);
+          view.setFloat32(offset + 44, Math.log(scales.y * scaleOffset.y), true);
+          view.setFloat32(offset + 48, Math.log(scales.z * scaleOffset.z), true);
+
+          // Rotation (Flip Y/Z components)
+          const worldRot = quaternion.clone().premultiply(rotationOffset);
+          view.setFloat32(offset + 52, worldRot.w, true);
+          view.setFloat32(offset + 56, worldRot.x, true);
+          view.setFloat32(offset + 60, -worldRot.y, true);
+          view.setFloat32(offset + 64, -worldRot.z, true);
+
+          offset += vertexRowSize;
+        });
+      }
+
+      // 7. Write Mesh Vertices
+      let currentVertexOffset = splatCount;
+
+      meshData.forEach(md => {
+        const mesh = md.mesh;
+        const posAttr = mesh.geometry.getAttribute('position');
+        const normalAttr = mesh.geometry.getAttribute('normal');
+
+        mesh.updateMatrixWorld();
+        const matrixWorld = mesh.matrixWorld;
+        const normalMatrix = new THREE.Matrix3().getNormalMatrix(matrixWorld);
+
+        for (let i = 0; i < md.vCount; i++) {
+          const localPos = new THREE.Vector3().fromBufferAttribute(posAttr, i);
+          const worldPos = localPos.applyMatrix4(matrixWorld);
+
+          // Position (Flip Y/Z)
+          view.setFloat32(offset + 0, worldPos.x, true);
+          view.setFloat32(offset + 4, -worldPos.y, true);
+          view.setFloat32(offset + 8, -worldPos.z, true);
+
+          // Normals
+          let nx = 0, ny = 0, nz = 0;
+          if (normalAttr) {
+            const localNorm = new THREE.Vector3().fromBufferAttribute(normalAttr, i);
+            localNorm.applyMatrix3(normalMatrix).normalize();
+            nx = localNorm.x;
+            ny = localNorm.y;
+            nz = localNorm.z;
+          }
+          view.setFloat32(offset + 12, nx, true);
+          view.setFloat32(offset + 16, -ny, true);
+          view.setFloat32(offset + 20, -nz, true);
+
+          // Color (Dummy)
+          view.setFloat32(offset + 24, 0, true);
+          view.setFloat32(offset + 28, 0, true);
+          view.setFloat32(offset + 32, 0, true);
+
+          // Opacity (Hidden)
+          // logit(0.0001) ~ -9.2
+          view.setFloat32(offset + 36, -9.2, true);
+
+          // Scale (Hidden)
+          // log(0.000001) ~ -13.8
+          view.setFloat32(offset + 40, -13.8, true);
+          view.setFloat32(offset + 44, -13.8, true);
+          view.setFloat32(offset + 48, -13.8, true);
+
+          // Rotation (Identity)
+          view.setFloat32(offset + 52, 1, true);
+          view.setFloat32(offset + 56, 0, true);
+          view.setFloat32(offset + 60, 0, true);
+          view.setFloat32(offset + 64, 0, true);
+
+          offset += vertexRowSize;
+        }
+
+        md.startIndex = currentVertexOffset;
+        currentVertexOffset += md.vCount;
+      });
+
+      // 8. Write Faces
+      meshData.forEach(md => {
+        const mesh = md.mesh;
+        const geo = mesh.geometry;
+        const startIndex = md.startIndex;
+
+        if (md.indexed) {
+          const indexAttr = geo.index;
+          for (let i = 0; i < indexAttr.count; i += 3) {
+            const a = indexAttr.getX(i) + startIndex;
+            const b = indexAttr.getX(i + 1) + startIndex;
+            const c = indexAttr.getX(i + 2) + startIndex;
+
+            uint8View[offset] = 3;
+            offset += 1;
+            view.setInt32(offset, a, true);
+            view.setInt32(offset + 4, b, true);
+            view.setInt32(offset + 8, c, true);
+            offset += 12;
+          }
+        } else {
+          for (let i = 0; i < md.vCount; i += 3) {
+            const a = i + startIndex;
+            const b = i + 1 + startIndex;
+            const c = i + 2 + startIndex;
+
+            uint8View[offset] = 3;
+            offset += 1;
+            view.setInt32(offset, a, true);
+            view.setInt32(offset + 4, b, true);
+            view.setInt32(offset + 8, c, true);
+            offset += 12;
+          }
+        }
+      });
+
+      return buffer;
+    }
+
+    document.getElementById('export-ply-package')?.addEventListener('click', async () => {
+      const btn = document.getElementById('export-ply-package');
+      const originalText = btn.textContent;
+      btn.textContent = '📦 Generating...';
+      btn.disabled = true;
+
+      try {
+        const buffer = await exportSinglePLY(currentSplat, createdMeshes);
+
+        if (buffer) {
+          const blob = new Blob([buffer], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'scene_merged.ply';
+          a.click();
+          URL.revokeObjectURL(url);
+          console.log('Exported Single PLY');
+        } else {
+          alert('Nothing to export!');
+        }
+      } catch (err) {
+        console.error('Failed to export PLY:', err);
+        alert('Failed to export: ' + err.message);
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    });
+
     // Mouse interaction for tool usage
     let isToolMouseDown = false;
 
     renderer.domElement.addEventListener('mousedown', (event) => {
-      if (activeTool === 'none') return;
 
       // Don't interfere with camera rotation
       if (event.button !== 0) return;
@@ -1992,20 +3056,40 @@
       // Finalize creation
       if (activeTool === 'sphere') {
         const radius = Math.max(0.5, creationStart.distanceTo(pos));
-        const mesh = createSphere(creationStart, radius);
-        mesh.visible = false; // Invisible but exists for raycasting
-        mesh.name = 'Sphere Selection';
-        collisionObjects.push(mesh);
 
-        // Persist SplatEdit
-        const savedSplatEdit = previewSplatEdit;
-        previewSplatEdit = null;
+        // Extract splat points within the sphere
+        console.log('=== Creating Collision from Sphere Selection ===');
+        console.log('Center:', creationStart, 'Radius:', radius);
 
-        addMesh(mesh, 'sphere', {
-          radius,
-          center: creationStart.clone(),
-          splatEdit: savedSplatEdit
-        });
+        const selectedPoints = getPointsInSphere(currentSplat, creationStart, radius);
+
+        let mesh = null;
+        if (selectedPoints.length > 0) {
+          // Create convex hull from selected points
+          mesh = createConvexHullFromPoints(selectedPoints);
+          console.log('✓ Created convex hull mesh from', selectedPoints.length, 'points');
+        } else {
+          // Fallback to simple sphere geometry if no points found
+          console.warn('No splat points found in sphere, using simple geometry');
+          mesh = createSphere(creationStart, radius);
+        }
+
+        if (mesh) {
+          mesh.visible = false; // Invisible but exists for raycasting
+          mesh.name = 'Sphere Selection';
+          collisionObjects.push(mesh);
+
+          // Persist SplatEdit
+          const savedSplatEdit = previewSplatEdit;
+          previewSplatEdit = null;
+
+          addMesh(mesh, 'sphere', {
+            radius,
+            center: creationStart.clone(),
+            splatEdit: savedSplatEdit,
+            pointCount: selectedPoints.length
+          });
+        }
       } else if (activeTool === 'box') {
         const dx = Math.abs(pos.x - creationStart.x);
         const dz = Math.abs(pos.z - creationStart.z);
@@ -2017,45 +3101,87 @@
           (creationStart.z + pos.z) / 2
         );
 
-        const mesh = createBox(center, width, boxHeight, depth);
-        mesh.visible = false; // Invisible
-        mesh.name = 'Box Selection';
-        collisionObjects.push(mesh);
+        // Extract splat points within the box
+        console.log('=== Creating Collision from Box Selection ===');
+        console.log('Center:', center, 'Size:', width, 'x', boxHeight, 'x', depth);
 
-        // Persist SplatEdit
-        const savedSplatEdit = previewSplatEdit;
-        previewSplatEdit = null;
+        const selectedPoints = getPointsInBox(currentSplat, center, width, boxHeight, depth);
 
-        addMesh(mesh, 'box', {
-          width,
-          height: boxHeight,
-          depth,
-          center: center.clone(),
-          splatEdit: savedSplatEdit
-        });
-      } else if (activeTool === 'brush' && brushPoints.length >= 2) {
-        // Create actual mesh for raycasting
-        const mesh = createBrushStroke(brushPoints, brushWidth);
-        mesh.visible = false; // Invisible
-        mesh.name = 'Brush Selection';
-        collisionObjects.push(mesh);
+        let mesh = null;
+        if (selectedPoints.length > 0) {
+          // Create convex hull from selected points
+          mesh = createConvexHullFromPoints(selectedPoints);
+          console.log('✓ Created convex hull mesh from', selectedPoints.length, 'points');
+        } else {
+          // Fallback to simple box geometry if no points found
+          console.warn('No splat points found in box, using simple geometry');
+          mesh = createBox(center, width, boxHeight, depth);
+        }
 
         if (mesh) {
-          // Persist the SplatEdit by detaching it from previewSplatEdit variable
-          // so clearPreview doesn't remove it from currentSplat.edits
+          mesh.visible = false; // Invisible
+          mesh.name = 'Box Selection';
+          collisionObjects.push(mesh);
+
+          // Persist SplatEdit
           const savedSplatEdit = previewSplatEdit;
-          previewSplatEdit = null; // Detach
+          previewSplatEdit = null;
+
+          addMesh(mesh, 'box', {
+            width,
+            height: boxHeight,
+            depth,
+            center: center.clone(),
+            splatEdit: savedSplatEdit,
+            pointCount: selectedPoints.length
+          });
+        }
+      } else if (activeTool === 'brush' && brushPoints.length >= 2) {
+        // NEW APPROACH: Create collision directly from brush points using tube geometry
+        console.log('=== Creating Collision from Brush Points ===');
+        console.log('Brush points:', brushPoints.length, 'Brush width:', brushWidth);
+
+        // Create collision mesh directly from brush points (no SDF sampling)
+        const mesh = createCollisionMeshFromBrushPoints(brushPoints, brushWidth);
+
+        if (mesh) {
+          mesh.visible = false;
+          mesh.name = 'Brush Selection';
+          collisionObjects.push(mesh);
+
+          const savedSplatEdit = previewSplatEdit;
+          previewSplatEdit = null;
 
           addMesh(mesh, 'brush', {
             points: brushPoints.map(p => p.clone()),
             width: brushWidth,
-            splatEdit: savedSplatEdit // Store reference to remove later
+            splatEdit: savedSplatEdit
           });
+
+          console.log('✓ Created collision mesh from brush points (tube geometry)');
+        } else {
+          console.error('Failed to create mesh from brush points');
         }
       }
 
       clearPreview();
     });
+
+    // ===== UI TOGGLE SYSTEM =====
+    const uiToggleBtn = document.getElementById('ui-toggle-btn');
+    const uiToggleText = uiToggleBtn?.querySelector('span');
+    let isUiVisible = true;
+
+    if (uiToggleBtn) {
+      uiToggleBtn.addEventListener('click', () => {
+        isUiVisible = !isUiVisible;
+        document.body.classList.toggle('ui-hidden', !isUiVisible);
+
+        if (uiToggleText) {
+          uiToggleText.textContent = isUiVisible ? 'Hide UI' : 'Show UI';
+        }
+      });
+    }
 
     // Escape key to cancel
     window.addEventListener('keydown', (event) => {
