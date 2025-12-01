@@ -309,6 +309,60 @@
       line-height: 1.5;
       color: #c0c0ff;
     }
+
+    /* UI Toggle Button */
+    #ui-toggle-btn {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #f5f5f5;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #ui-toggle-btn:hover {
+      background: rgba(30, 30, 50, 0.9);
+      border-color: #7f5cff;
+      box-shadow: 0 4px 16px rgba(127, 92, 255, 0.4);
+    }
+
+    #ui-toggle-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Panel Transitions */
+    #control-panel,
+    #mesh-tools-panel {
+      transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.4s ease;
+    }
+
+    /* Hidden States */
+    body.ui-hidden #control-panel {
+      transform: translateX(-150%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.ui-hidden #mesh-tools-panel {
+      transform: translateX(150%);
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
   <script type="importmap">
   {
@@ -319,6 +373,13 @@
   }
 </script>
 
+  <button id="ui-toggle-btn">
+    <svg viewBox="0 0 24 24">
+      <path
+        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+    </svg>
+    <span>Hide UI</span>
+  </button>
   <div id="control-panel">
     <h2>Import my splat</h2>
     <label for="splat-url-input">Splat / SPZ URL</label>
@@ -3105,6 +3166,22 @@ end_header
 
       clearPreview();
     });
+
+    // ===== UI TOGGLE SYSTEM =====
+    const uiToggleBtn = document.getElementById('ui-toggle-btn');
+    const uiToggleText = uiToggleBtn?.querySelector('span');
+    let isUiVisible = true;
+
+    if (uiToggleBtn) {
+      uiToggleBtn.addEventListener('click', () => {
+        isUiVisible = !isUiVisible;
+        document.body.classList.toggle('ui-hidden', !isUiVisible);
+
+        if (uiToggleText) {
+          uiToggleText.textContent = isUiVisible ? 'Hide UI' : 'Show UI';
+        }
+      });
+    }
 
     // Escape key to cancel
     window.addEventListener('keydown', (event) => {
